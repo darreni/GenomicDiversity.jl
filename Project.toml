@@ -3,6 +3,10 @@ uuid = "594eec9e-a086-4631-8fc7-61104af37930"
 authors = ["Darren Irwin"]
 version = "1.0.0-DEV"
 
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
+
 [compat]
 julia = "1"
 
