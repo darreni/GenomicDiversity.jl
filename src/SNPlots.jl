@@ -216,10 +216,12 @@ Do a principal components analysis based on genotypes of individuals (colored by
 # Notes
 
 Returns a tuple containing:
-1) the PCA model.
-2) PC values of individuals (before any flipping of axes).
-3) PC1 values of individuals(after any flipping).
-4) PC2 values of individuals (after any flipping).
+1) `model`: the PCA model.
+2) `metadata`: the metadata of individuals included in the PCA.
+2) `values`: PC values of individuals (before any flipping of axes).
+3) `PC1`: PC1 values of individuals(after any flipping).
+4) `PC2`: PC2 values of individuals (after any flipping).
+5) `PCAfig`: The PCA figure.
 """
 function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA; 
                     sampleSet = "", regionText="",
@@ -291,7 +293,7 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
         showPlot && display(f) 
     end    
 
-    return (model = PCA_indGenos, values = PCA_values, PC1 = PC1, PC2 = PC2, PCAfig = f)
+    return (model = PCA_indGenos, metadata = indMetadata_groupSelected, values = PCA_values, PC1 = PC1, PC2 = PC2, PCAfig = f)
 end
 
 
