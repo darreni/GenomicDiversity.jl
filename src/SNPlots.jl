@@ -212,6 +212,7 @@ Do a principal components analysis based on genotypes of individuals (colored by
 - `flip1`: Optional, set to `true` if wanting to flip PC1 (i.e., multiply by -1).
 - `flip2`: Same but for PC2.
 - `showPlot`: Set to `false` if not wanting the function to draw display
+- `autolimitaspect_setting`: for unconstrained axes, set to `nothing` (default is `1` for 1:1 axes)
 
 # Notes
 
@@ -226,7 +227,7 @@ Returns a tuple containing:
 function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA; 
                     sampleSet = "", regionText="",
                     flip1 = false, flip2 = false,
-                    showPlot = true)
+                    showPlot = true, autolimitaspect_setting = 1)
     
     selection = map(in(groups_to_plot_PCA), indMetadata.Fst_group)
     matrixForPCA = Matrix{Float32}(transpose(genotypes[selection, :]))
@@ -270,7 +271,7 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2",
-            autolimitaspect = 1
+            autolimitaspect = autolimitaspect_setting
         )
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
