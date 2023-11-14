@@ -397,7 +397,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     # The section below does the default of coloring the allele most common in group1 as the dark purple.
     # Otherwise, set colorAllelesByGroup=false to have the alleles colored according to ref vs. alternate 
     if colorAllelesByGroup
-        altAlleleHiInGroup1 = SNP_freqs[findfirst(indMetadata.Fst_group .== group1), :] .> 0.5
+        altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
         SNP_genotypes_subset[SNP_genotypes_subset.==3] .= -1
     end
