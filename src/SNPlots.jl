@@ -404,9 +404,9 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
-    sorted_SNP_genotypes_subset = SNP_genotypes_subset[sortperm(indMetadata.plot_order, rev=false), :]
+    sorted_SNP_genotypes_subset = SNP_genotypes_subset[sortperm(indMetadata_subset.plot_order, rev=false), :]
     numInds = size(sorted_SNP_genotypes_subset, 1) # fast way to get number of rows
-    sorted_indMetadata_subset = indMetadata_subset[sortperm(indMetadata.plot_order, rev=false), :]
+    sorted_indMetadata_subset = indMetadata_subset[sortperm(indMetadata_subset.plot_order, rev=false), :]
 
     # filter out the SNPs that have too much missing data:
     numberMissing = sum(sorted_SNP_genotypes_subset .== -1 .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
