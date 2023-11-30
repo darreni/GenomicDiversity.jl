@@ -364,7 +364,8 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `group1`: Optional (default is `plotGroups[1]`); when `colorAllelesByGroup` is `true`, this is the group that determine which allele is dark purple. 
 - `indFontSize`: Optional; the font size of the individual ID labels.
 - `figureSize`: Optional; the size of the figure; default is `(1200, 1200)`.  
-
+- `show_SNP_density`: Optional; default is `true` to show a density plot. 
+- `densityPlotColor`: Optional; default is `:steelblue1`
 
 # Notes
 Returns a tuple containing:
@@ -377,7 +378,8 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
                             regionInfo, pos, Fst, pairwiseNamesFst,
                             genoData, indMetadata, freqs, plotGroups, plotGroupColors;
                             colorAllelesByGroup=true, group1=plotGroups[1],
-                            indFontSize=10, figureSize=(1200, 1200))   
+                            indFontSize=10, figureSize=(1200, 1200),
+                            show_SNP_density=true, densityPlotColor = :steelblue1)   
     chr, positionMin, positionMax, regionText = regionInfo
     # if the genoData has missing values, then convert to -1:
     genoData[ismissing.(genoData)] .= -1
@@ -418,13 +420,15 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
 
     # Set up the plot window:
     f = CairoMakie.Figure(resolution=figureSize)
+
+    # Set up the main Axis: 
     ax = Axis(f[1, 1],
         title=string(regionText, ": genotypes Fst>", Fst_cutoff, " loci between ", groupsToCompare),
         # xlabel = "location",
         # ylabel = "individual",
         titlesize=30,
-        limits=(0.5 - 0.09 * (num_SNPs_to_plot + 0.5), 1.09 * (num_SNPs_to_plot + 0.5),
-            0.5 - 0.3 * numInds, numInds + 1)
+        limits=(0.5 - 0.09 * (num_SNPs_to_plot), 0.5 + 1.09 * (num_SNPs_to_plot),
+            0.5 - 0.3 * numInds, 0.5 + numInds)
     )
     hidedecorations!(ax) # hide background lattice and axis labels
     hidespines!(ax) # hide box around plot
@@ -491,7 +495,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
         end
     end
 
-    # make lower part of figure (indicating position along chromosome) #NOTE THAT CHROMOSOME LENGTH NOT QUITE THE TRUE LENGTH
+    # make lower part of figure (indicating position along chromosome)
     chrLine_y = 0.5 - 0.2numInds
     topHatchLine_y1 = 0.6
     topHatchLine_y2 = 0.5 - 0.02numInds
@@ -499,7 +503,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     lowHatchLine_y2 = 0.5 - 0.2numInds
     # draw chromosome line and text labels
     CairoMakie.lines!([0.5, num_SNPs_to_plot + 0.5], [chrLine_y, chrLine_y], color="black", linewidth=5)
-    CairoMakie.text!(0.5 + (num_SNPs_to_plot / 2), chrLine_y - 0.05numInds; text=string("Location along chromosome ", chr), align=(:center, :center), fontsize=30)
+    CairoMakie.text!(0.5 + (num_SNPs_to_plot / 2), chrLine_y - 0.04numInds; text=string("Location along chromosome ", chr), align=(:center, :center), fontsize=30)
     CairoMakie.text!(0.5, chrLine_y - 0.025numInds; text=string(positionMin), align=(:center, :center), fontsize=20)
     CairoMakie.text!(0.5 + num_SNPs_to_plot, chrLine_y - 0.025numInds; text=string(positionMax), align=(:center, :center), fontsize=20)
     # draw lines from SNPs to chromosome line
@@ -509,7 +513,29 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
         CairoMakie.lines!([i, 0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin)], [topHatchLine_y2, lowHatchLine_y1], color="grey20", linewidth=1)
         CairoMakie.lines!([0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin), 0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin)], [lowHatchLine_y1, lowHatchLine_y2], color="grey20", linewidth=1)
     end
+
+    if show_SNP_density
+        # show SNP density plot, using an inset axis
+        selection = (pos.chrom .== chr) .&
+                    (pos.position .≥ positionMin) .&
+                    (pos.position .≤ positionMax)
+        pos_region = pos[selection, :] 
+        CairoMakie.text!(0.5 + (num_SNPs_to_plot / 2), chrLine_y - 0.075numInds; text=string("Showing ", num_SNPs_to_plot, " SNPs out of ", size(pos_region, 1), " (distribution in lower plot)"), align=(:center, :center), fontsize=20)
+        density_plot_height = 0.05
+        inset_ax = Axis(f[1, 1],
+                    width = Relative(1 / 1.18), # calculated these from the above settings
+                    height = Relative(density_plot_height), 
+                    halign = :center,
+                    valign = 0.1057 / 1.3,  # I had to sort of titrate this--the calculations (based on the above) were slightly off
+                    backgroundcolor=:white,
+                    limits=(0, last(pos_region.position), 0, nothing))
+        hidedecorations!(inset_ax) # hide background lattice and axis labels
+        hidespines!(inset_ax)
+        density!(pos_region.position, color = (densityPlotColor, 0.5))   #color = (:lightsteelblue1, 0.5)     
+    end
+
     display(f)
+
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
 end
 
