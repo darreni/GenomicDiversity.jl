@@ -366,6 +366,7 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `figureSize`: Optional; the size of the figure; default is `(1200, 1200)`.  
 - `show_SNP_density`: Optional; default is `true` to show a density plot. 
 - `densityPlotColor`: Optional; default is `:steelblue1`
+- `plotTitle`: Optional; default will make a title. For no title, set to `""`.
 
 # Notes
 Returns a tuple containing:
@@ -377,9 +378,13 @@ Returns a tuple containing:
 function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAllowed,
                             regionInfo, pos, Fst, pairwiseNamesFst,
                             genoData, indMetadata, freqs, plotGroups, plotGroupColors;
-                            colorAllelesByGroup=true, group1=plotGroups[1],
+                            colorAllelesByGroup = true, group1 = plotGroups[1],
                             indFontSize=10, figureSize=(1200, 1200),
-                            show_SNP_density=true, densityPlotColor = :steelblue1)   
+                            show_SNP_density = true, densityPlotColor = :steelblue1,
+                            plotTitle = nothing)
+    if isnothing(plotTitle)
+        plotTitle = string(regionText, ": genotypes Fst>", Fst_cutoff, " loci between ", groupsToCompare)
+    end
     chr, positionMin, positionMax, regionText = regionInfo
     # if the genoData has missing values, then convert to -1:
     genoData[ismissing.(genoData)] .= -1
@@ -423,7 +428,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
 
     # Set up the main Axis: 
     ax = Axis(f[1, 1],
-        title=string(regionText, ": genotypes Fst>", Fst_cutoff, " loci between ", groupsToCompare),
+        title = plotTitle,
         # xlabel = "location",
         # ylabel = "individual",
         titlesize=30,
