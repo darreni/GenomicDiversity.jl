@@ -271,8 +271,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2",
-            autolimitaspect = autolimitaspect_setting
-        )
+            autolimitaspect = autolimitaspect_setting)
+        hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
             CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color=group_colors_PCA[i], markersize=10, strokewidth=0.5)
@@ -285,8 +285,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
         global ax = Axis(f[1, 1],
             title = plotTitle,
             xlabel = "PC1",
-            ylabel = "PC2",
-        )
+            ylabel = "PC2")
+        hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
             CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color=group_colors_PCA[i], markersize=10, strokewidth=0.5)
