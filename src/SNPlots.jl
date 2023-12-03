@@ -382,10 +382,12 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
                             indFontSize=10, figureSize=(1200, 1200),
                             show_SNP_density = true, densityPlotColor = :steelblue1,
                             plotTitle = nothing)
+
+    chr, positionMin, positionMax, regionText = regionInfo
     if isnothing(plotTitle)
         plotTitle = string(regionText, ": genotypes Fst>", Fst_cutoff, " loci between ", groupsToCompare)
     end
-    chr, positionMin, positionMax, regionText = regionInfo
+    
     # if the genoData has missing values, then convert to -1:
     genoData[ismissing.(genoData)] .= -1
     # Filter SNPs according to Fst of the groupsToCompare
