@@ -197,6 +197,7 @@ function limitIndsToPlot(plotGroups, numIndsToPlot, genoData, indMetadata)
     return genoData_included, indMetadata_included
 end
 
+
 """
     plotPCA(genotypes, ind_with_metadata, groups_to_plot_PCA, group_colors_PCA; sampleSet = "", regionText="", flip1 = false, flip2 = false)
 
@@ -207,12 +208,18 @@ Do a principal components analysis based on genotypes of individuals (colored by
 - `indMetadata`: Matrix containing metadata for individuals (make sure there is an `Fst_group`` column).
 - `groups_to_plot_PCA`: Vector of names of groups to include.
 - `group_colors_PCA`: Vector listing plotting color for each each group.
-- `sampleSet`: Optional, for specifying a name of the sample set to appear in the plot title.
-- `regionText`: Optional, for specifying a name of the genomic region to appear in the plot title.
-- `flip1`: Optional, set to `true` if wanting to flip PC1 (i.e., multiply by -1).
+Optional arguments:
+- `sampleSet`: Name of the sample set to appear in the plot title.
+- `regionText`: Name of the genomic region to appear in the plot title.
+- `flip1`: Set to `true` if wanting to flip PC1 (i.e., multiply by -1).
 - `flip2`: Same but for PC2.
-- `showPlot`: Set to `false` if not wanting the function to draw display
-- `autolimitaspect_setting`: for unconstrained axes, set to `nothing` (default is `1` for 1:1 axes)
+- `showPlot`: Set to `false` if not wanting the function to draw display.
+- `autolimitaspect_setting`: For unconstrained axes, set to `nothing` (default is `1` for 1:1 axes).
+- `lineOpacity`: Opacity of the line color of symbols.
+- `fillOpacity`: Opacity of the fill color of symbols.
+- `symbolSize`: Size of symbols.
+- `plotTitle`: Specify if a specific title is wanted; otherwise will fill in a title.
+- `showTitle`: Set to `false` for no title. 
 
 # Notes
 
@@ -227,20 +234,26 @@ Returns a tuple containing:
 function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA; 
                     sampleSet = "", regionText="",
                     flip1 = false, flip2 = false,
-                    showPlot = true, autolimitaspect_setting = 1)
+                    showPlot = true, autolimitaspect_setting = 1,
+                    lineOpacity = 0.8, fillOpacity = 0.2,
+                    symbolSize = 10, plotTitle = nothing, showTitle = true)
     
     selection = map(in(groups_to_plot_PCA), indMetadata.Fst_group)
     matrixForPCA = Matrix{Float32}(transpose(genotypes[selection, :]))
     indMetadata_groupSelected = indMetadata[selection, :]
 
-    if sampleSet == "" && regionText == ""
-        plotTitle = "PCA"
-    elseif sampleSet == ""
-        plotTitle = string("PCA: ", regionText)
-    elseif regionText == ""
-        plotTitle = string("PCA of ", sampleSet)
-    else 
-        plotTitle = string("PCA of ", sampleSet, ": ", regionText)
+    if showTitle && isnothing(plotTitle)
+        if sampleSet == "" && regionText == ""
+            plotTitle = "PCA"
+        elseif sampleSet == ""
+            plotTitle = string("PCA: ", regionText)
+        elseif regionText == ""
+            plotTitle = string("PCA of ", sampleSet)
+        else 
+            plotTitle = string("PCA of ", sampleSet, ": ", regionText)
+        end
+    elseif !showTitle  # if showTitle is false, then set title to ""
+        plotTitle = ""
     end
 
     # this now works well--appears to NOT be scaling the variables to variance 1, which is good
@@ -266,8 +279,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
     end
 
     try
-        global f = CairoMakie.Figure()
-        global ax = Axis(f[1, 1],
+        f = CairoMakie.Figure()
+        ax = Axis(f[1, 1],
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2",
@@ -275,27 +288,28 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
         hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
-            CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color=group_colors_PCA[i], markersize=10, strokewidth=0.5)
+            CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color = (group_colors_PCA[i], fillOpacity), markersize = symbolSize, strokewidth=0.5, strokecolor = ("black", lineOpacity))
         end
         showPlot && display(f)
     catch # Makie sometimes has an error due to the "autolimitaspect = 1" above, so adding this "try-catch" structure to keep program going:
         println("Did not success in drawing PCA with 1:1 axes for ", regionText,
                 ", so drawing with non-proportional axes.")
-        global f = CairoMakie.Figure()
-        global ax = Axis(f[1, 1],
+        f = CairoMakie.Figure()
+        ax = Axis(f[1, 1],
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2")
         hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
-            CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color=group_colors_PCA[i], markersize=10, strokewidth=0.5)
+            CairoMakie.scatter!(ax, PC1[selection], PC2[selection], marker = :diamond, color = (group_colors_PCA[i], fillOpacity), markersize = symbolSize, strokewidth = 0.5, strokecolor = ("black", lineOpacity))
         end
         showPlot && display(f) 
-    end    
+    end 
 
     return (model = PCA_indGenos, metadata = indMetadata_groupSelected, values = PCA_values, PC1 = PC1, PC2 = PC2, PCAfig = f)
 end
+
 
 
 # Option to focus on a region of chromosome.
