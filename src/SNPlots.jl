@@ -279,8 +279,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
     end
 
     try
-        f = CairoMakie.Figure()
-        ax = Axis(f[1, 1],
+        global f = CairoMakie.Figure()
+        global ax = Axis(f[1, 1],
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2",
@@ -294,8 +294,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
     catch # Makie sometimes has an error due to the "autolimitaspect = 1" above, so adding this "try-catch" structure to keep program going:
         println("Did not success in drawing PCA with 1:1 axes for ", regionText,
                 ", so drawing with non-proportional axes.")
-        f = CairoMakie.Figure()
-        ax = Axis(f[1, 1],
+        global f = CairoMakie.Figure()
+        global ax = Axis(f[1, 1],
             title = plotTitle,
             xlabel = "PC1",
             ylabel = "PC2")
