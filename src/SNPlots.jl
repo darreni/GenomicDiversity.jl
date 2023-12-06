@@ -220,6 +220,9 @@ Optional arguments:
 - `symbolSize`: Size of symbols.
 - `plotTitle`: Specify if a specific title is wanted; otherwise will fill in a title.
 - `showTitle`: Set to `false` for no title. 
+- `xLabelText`: Can choose an x axis label.
+- `yLabelText`: Can choose a y axis label.
+- `labelSize`: Size of x and y axis labels.
 
 # Notes
 
@@ -236,7 +239,9 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
                     flip1 = false, flip2 = false,
                     showPlot = true, autolimitaspect_setting = 1,
                     lineOpacity = 0.8, fillOpacity = 0.2,
-                    symbolSize = 10, plotTitle = nothing, showTitle = true)
+                    symbolSize = 10, plotTitle = nothing, showTitle = true,
+                    xLabelText = "Genomic PC1", yLabelText = "Genomic PC2",
+                    labelSize = 24)
     
     selection = map(in(groups_to_plot_PCA), indMetadata.Fst_group)
     matrixForPCA = Matrix{Float32}(transpose(genotypes[selection, :]))
@@ -282,8 +287,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
         global f = CairoMakie.Figure()
         global ax = Axis(f[1, 1],
             title = plotTitle,
-            xlabel = "PC1",
-            ylabel = "PC2",
+            xlabel = xLabelText, xlabelsize = labelSize,
+            ylabel = yLabelText, ylabelsize = labelSize,
             autolimitaspect = autolimitaspect_setting)
         hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
