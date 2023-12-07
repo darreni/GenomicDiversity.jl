@@ -367,7 +367,7 @@ Construct a genotype-by-individual plot, including only loci that pass threshold
 Under the default setting, alleles are colored (dark purple vs. light purple) according to whichever allele is designated as `group1`. 
 
 ​# Arguments
-- `groupsToCompare`: The two groups (in format `name1_name2`) for filtering loci based on Fst.
+- `groupsToCompare`: The two groups (in format `name1_name2`) for filtering loci based on Fst. This can be a single string, or a vector of strings, each with a population comparison to include if Fst is above Fst_cutoff.
 - `Fst_cutoff`: The minimum Fst for a locus to be included in the plot.
 - `missingFractionAllowed`: The maximum missing genotype fraction for a locus to be included.
 - `regionInfo`: Information regarding the scaffold and region of focus; a tuple provided by `chooseChrRegion()`.
@@ -409,15 +409,29 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     
     # if the genoData has missing values, then convert to -1:
     genoData[ismissing.(genoData)] .= -1
-    # Filter SNPs according to Fst of the groupsToCompare
-    rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare)
+
     # write ≥ using \ge tab, and ≤ using \le tab.
     # note the operator ".&" (bitwise &) is much more efficient than ".&&"
-    selection = (pos.chrom .== chr) .&
-                (Fst[rowChoice, :] .≥ Fst_cutoff) .&
-                (.!isnan.(Fst[rowChoice, :])) .&
+    # Select based on the genome region:
+    selection_position = (pos.chrom .== chr) .&
                 (pos.position .≥ positionMin) .&
                 (pos.position .≤ positionMax)
+
+    # Filter SNPs according to Fst of the groupsToCompare
+    if typeof(groupsToCompare) == String  # If one scaffold name was provided
+        rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare)
+        selection_Fst = (.!isnan.(Fst[rowChoice, :])) .& (Fst[rowChoice, :] .≥ Fst_cutoff)
+    elseif typeof(groupsToCompare) == Vector{String}
+        rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare[1])
+        selection_Fst = (.!isnan.(Fst[rowChoice, :])) .& (Fst[rowChoice, :] .≥ Fst_cutoff)
+        if size(groupsToCompare, 1) ≥ 2
+            for i in 2:size(groupsToCompare, 1)
+                rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare[i])
+                selection_Fst = selection_Fst .| (.!isnan.(Fst[rowChoice, :])) .& (Fst[rowChoice, :] .≥ Fst_cutoff)
+            end
+        end
+    end
+    selection = selection_position .& selection_Fst
     SNP_genotypes = genoData[:, selection]
     SNP_freqs = freqs[:, selection]
     SNP_positions = pos.position[selection]
