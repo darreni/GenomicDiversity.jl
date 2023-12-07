@@ -302,8 +302,8 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
         global f = CairoMakie.Figure()
         global ax = Axis(f[1, 1],
             title = plotTitle,
-            xlabel = "PC1",
-            ylabel = "PC2")
+            xlabel = xLabelText, xlabelsize = labelSize,
+            ylabel = yLabelText, ylabelsize = labelSize)
         hidedecorations!(ax, label = false, ticklabels = false, ticks = false) # hide background lattice
         for i in eachindex(groups_to_plot_PCA) 
             selection = indMetadata_groupSelected.Fst_group .== groups_to_plot_PCA[i]
