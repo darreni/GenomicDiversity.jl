@@ -6,6 +6,18 @@ as a set of functions for processing and displaying SNP data.
 Converted to an actual package (private) with a Github repo on 11 November 2023.
     =#
 
+# Useful site for developing packages: https://julialang.org/contribute/developing_package/
+
+# After making changes to this package, run: 
+# julia> ] # Go to the package mode
+# pkg> activate .
+# pkg> test # to run basic test
+# Then, where being used, need to run:
+# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/SNPlots.jl")
+# using SNPlots
+
+
+
 module SNPlots
 
 # make functions available in calling namespace through "using SNPlots" command, without needing to prefix module name: 
@@ -17,7 +29,8 @@ export greet_SNPlots,
     plotPCA,
     chooseChrRegion,
     plotGenotypeByIndividual,
-    getRollingMean
+    getRollingMean,
+    getWindowedFst
 
 using MultivariateStats
 using CairoMakie
@@ -460,7 +473,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     num_SNPs_to_plot = length(SNP_positions_subset2)
 
     # Set up the plot window:
-    f = CairoMakie.Figure(resolution=figureSize)
+    f = CairoMakie.Figure(size=figureSize)
 
     # Set up the main Axis: 
     ax = Axis(f[1, 1],
@@ -609,5 +622,38 @@ function getRollingMean(inputVector, windowSize)
     end
     return rollingMeans
 end
+
+
+"""
+    getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
+
+Calculate windowed Fst along chromosomal regions, uses output from each site's Fst (produced by the getFst() function). 
+
+This is calculated according to Weir&Cockerham1984 (with sample size and pop number correction), calculated as windowed numerator over windowed denominator, in whole windows starting on left side of the region.
+
+​# Arguments
+- `FstNumerator`: Produced by the getFst() function, this is a vector of the Fst numerator values for each locus. 
+- `FstDenominator`: Produced by the getFst() function, this is a vector of the Fst denominator values for each locus. 
+- `pos`: Matrix providing genomic location of each locus; there must be a `position` column.
+- `windowSize`: An integer indicating the window number of values to include in each mean.
+
+# Notes
+- returns a tuple of two vectors: rolling mean position, and rolling mean Fst
+- the calculations ignore NaN values (which would be in both numerator and denominator)
+- returns NaN for a window if there are no real values in the window 
+"""
+function getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
+    rollingMeanPos = getRollingMean(pos.position, windowSize) # get per-window mean SNP position along scaffold
+    rollingMeanFst = Array{Float64, 2}(undef, size(FstNumerator, 1), length(rollingMeanPos))
+    for i in 1:size(FstNumerator, 1)
+        rollingMeanFstNumerator = getRollingMean(FstNumerator[i,:], windowSize)
+        rollingMeanFstDenominator = getRollingMean(FstDenominator[i,:], windowSize)
+        rollingMeanFst[i,:] = rollingMeanFstNumerator ./ rollingMeanFstDenominator
+    end
+    return rollingMeanPos, rollingMeanFst
+end
+
+
+
 
 end # of module SNPlots
