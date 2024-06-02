@@ -30,7 +30,8 @@ export greet_SNPlots,
     chooseChrRegion,
     plotGenotypeByIndividual,
     getRollingMean,
-    getWindowedFst
+    getWindowedFst,
+    getWindowedIndHet
 
 using MultivariateStats
 using CairoMakie
@@ -654,6 +655,32 @@ function getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
 end
 
 
+"""
+    getWindowedIndHet(genotypes, pos, windowSize)
+
+Calculate windowed heterozygosity for each individual, across a genomic region.
+
+​# Arguments
+- `genotypes`: The genotype matrix, where rows are individuals and columns are loci, with genotype codes 0,1,2 meaning homozygous reference, heterozygote, homozygous alternate, and missing genotypes can be either -1 or `missing`.
+- `pos`: A matrix containing genomic location of each locus; must have a `position` column (numerical position on scaffold). 
+- `windowSize`: An integer indicating the number of loci to include in each mean.
+
+# Notes
+Returns a tuple containing 1) a vector of windowed mean positions, and 2) a matrix of windowed heterozgyosity values (rows are individuals and columns are loci). 
+"""
+function getWindowedIndHet(genotypes, pos, windowSize)
+    rollingMeanPos = getRollingMean(pos.position, windowSize) # get per-window mean SNP position along scaffold
+    # convert both homozygotes to value zero, leaving heterozgyotes value one;
+    # also covert missing and -1 values to NaN, which getRollingMean function deals with
+    heterozygotes = replace(genotypes, 2 => 0, missing => NaN, -1 => NaN)
+
+    rollingMeanHet = Array{Float64, 2}(undef, size(heterozygotes, 1), length(rollingMeanPos))
+    # cycle through individuals
+    for i in 1:size(heterozygotes, 1)
+        rollingMeanHet[i,:] = getRollingMean(heterozygotes[i,:], windowSize)
+    end
+    return rollingMeanPos, rollingMeanHet
+end
 
 
 end # of module SNPlots
