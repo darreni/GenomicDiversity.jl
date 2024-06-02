@@ -439,7 +439,7 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
         rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare[1])
         selection_Fst = (.!isnan.(Fst[rowChoice, :])) .& (Fst[rowChoice, :] .≥ Fst_cutoff)
         if size(groupsToCompare, 1) ≥ 2
-            for i in 2:size(groupsToCompare, 1)
+            for i in eachindex(groupsToCompare)[2:end]
                 rowChoice = findfirst(pairwiseNamesFst .== groupsToCompare[i])
                 selection_Fst = selection_Fst .| (.!isnan.(Fst[rowChoice, :])) .& (Fst[rowChoice, :] .≥ Fst_cutoff)
             end
@@ -645,7 +645,7 @@ This is calculated according to Weir&Cockerham1984 (with sample size and pop num
 function getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
     rollingMeanPos = getRollingMean(pos.position, windowSize) # get per-window mean SNP position along scaffold
     rollingMeanFst = Array{Float64, 2}(undef, size(FstNumerator, 1), length(rollingMeanPos))
-    for i in 1:size(FstNumerator, 1)
+    for i in axes(FstNumerator, 1)
         rollingMeanFstNumerator = getRollingMean(FstNumerator[i,:], windowSize)
         rollingMeanFstDenominator = getRollingMean(FstDenominator[i,:], windowSize)
         rollingMeanFst[i,:] = rollingMeanFstNumerator ./ rollingMeanFstDenominator
