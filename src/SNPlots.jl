@@ -16,7 +16,8 @@ export greet_SNPlots,
     limitIndsToPlot,
     plotPCA,
     chooseChrRegion,
-    plotGenotypeByIndividual
+    plotGenotypeByIndividual,
+    getRollingMean
 
 using MultivariateStats
 using CairoMakie
@@ -577,6 +578,36 @@ function plotGenotypeByIndividual(groupsToCompare, Fst_cutoff, missingFractionAl
     display(f)
 
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
+end
+
+"""
+    getRollingMean(inputVector, windowSize)
+
+Calculate non-overlapping windowed arithmetic average (i.e., means) from a vector of numeric values.
+
+​# Arguments
+- `inputVector`: A vector of numeric values (can include NaN).
+- `windowSize`: An integer indicating the window number of values to include in each mean.
+
+# Notes
+- Returns a vector of windowed means. 
+- In the calculations, NaN values are ignored.
+- If all values in a window are NaN, then the mean is NaN.
+"""
+function getRollingMean(inputVector, windowSize)
+    numWindows = length(inputVector) ÷ windowSize  # this is the quotient (rounds to integer)
+    rollingMeans = Vector{Float64}(undef, numWindows) # set up place to store data
+    for i in 1:numWindows
+        start = 1 + (i-1)*windowSize
+        windowValues = inputVector[start : (start + windowSize - 1)]  # this ignores the NaN values
+        windowValues_real = windowValues[.!isnan.(windowValues)]
+        if length(windowValues_real) > 0
+            rollingMeans[i] = sum(windowValues_real) / length(windowValues_real)
+        else
+            rollingMeans[i] = NaN # if there are no non-NaN values in the inputVector
+        end
+    end
+    return rollingMeans
 end
 
 end # of module SNPlots
