@@ -10,8 +10,8 @@ Converted to an actual package (private) with a Github repo on 11 November 2023.
 
 # After making changes to this package, run: 
 # julia> ] # Go to the package mode
-# pkg> activate .
-# pkg> test # to run basic test
+# (SNPlots) pkg> activate .
+# (SNPlots) pkg> test # to run basic test
 # Then, where being used, need to run:
 # import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/SNPlots.jl")
 # using SNPlots
