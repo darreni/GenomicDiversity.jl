@@ -31,6 +31,7 @@ export greet_SNPlots,
     plotGenotypeByIndividual,
     getRollingMean,
     getWindowedFst,
+    plotGenomeFst,
     getWindowedIndHet
 
 using MultivariateStats
@@ -652,6 +653,120 @@ function getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
         rollingMeanFst[i,:] = rollingMeanFstNumerator ./ rollingMeanFstDenominator
     end
     return rollingMeanPos, rollingMeanFst
+end
+
+
+"""
+    plotGenomeFst(scaffolds_to_plot, 
+                    windowed_Fst_all,
+                    pairwiseNamesFst,
+                    windowed_pos_all,
+                    groupsToPlotFst,
+                    groupColorsFst;
+                    lineTransparency = 0.8,
+                    fillTransparency = 0.2,
+                    figureSize = (1200, 1200))
+
+Plot windowed Fst along chromosomal regions, for multiple population comparisons.
+
+​# Arguments
+- `scaffolds_to_plot`: a vector of the scaffold names to include in the plot.
+- `windowed_Fst_all`: a matrix of Fst values (rows representing different population comparisons; columns different genomic regions).
+- `pairwiseNamesFst`: a vector of names indicating the pairs of populations in rows of `windowed_Fst_all`.
+- `windowed_pos_all`: dataframe containing genomic locations of windows (must have columns `chrom` and `mean_position`).
+- `groupsToPlotFst`: a vector of strings indicating the population comparisons to include.
+- `groupColorsFst`: the colors to use to plot the comparisons in `groupsToPlotFst`
+- `lineTransparency` (optional): transparency of the lines
+- `fillTransparency` (optional): transparency of the fill color
+- `figureSize` (optional): size of the figure (hight, width)
+
+# Notes
+- Returns the figure.
+"""
+function plotGenomeFst(scaffolds_to_plot,
+    windowed_Fst_all,
+    pairwiseNamesFst,
+    windowed_pos_all,
+    groupsToPlotFst,
+    groupColorsFst;
+    lineTransparency=0.8,
+    fillTransparency=0.2,
+    figureSize=(1200, 1200))
+
+    # get sizes of chromosomes (note this actually isn't the true length, just the mean position of the rightmost window):
+    scaffold_lengths = repeat([-1], length(scaffolds_to_plot))# vector of Int64
+    for i in 1:length(scaffolds_to_plot)
+        selection = windowed_pos_all.chrom .== scaffolds_to_plot[i]
+        if sum(selection) == 0
+            scaffold_lengths[i] = 0
+        else
+            scaffold_lengths[i] = round(Int, maximum(windowed_pos_all.mean_position[selection]))
+        end
+    end
+
+    scaffoldPlottedAlready = falses(length(scaffolds_to_plot))
+    bpPerRow = 200_000_000
+    bpGapBetweenScaffolds = 10_000_000
+    scaffoldInRow = Vector{Vector{String}}() # declare a vector of vectors to store the chromosome names per row
+    scaffoldBpStartInRow = Vector{Vector{Int}}()
+    row = 1
+
+    while sum(scaffoldPlottedAlready .== false) > 0  # repeat until all chr have a row to be plotted in
+        bpStart = 0
+        remainingRowLength = bpPerRow
+        push!(scaffoldInRow, []) # initialize an empty vector for the next row
+        push!(scaffoldBpStartInRow, []) # initialize an empty vector for the next row
+        placeInRow = 1
+        # look through chromosomes and find some to go in this row
+        for i in 1:length(scaffolds_to_plot)
+            # if not plotted and short enough, add to row:
+            if scaffoldPlottedAlready[i] .== false .&& scaffold_lengths[i] .<= remainingRowLength
+                push!(scaffoldInRow[row], scaffolds_to_plot[i])
+                push!(scaffoldBpStartInRow[row], bpStart)
+                remainingRowLength = remainingRowLength - scaffold_lengths[i] - bpGapBetweenScaffolds
+                scaffoldPlottedAlready[i] = true
+                placeInRow += 1
+                bpStart = bpStart + scaffold_lengths[i] + bpGapBetweenScaffolds
+            end
+        end
+        row += 1
+    end
+    println(scaffoldInRow)
+
+    # Plot in the order defined above
+    f = CairoMakie.Figure(size=figureSize)
+    numRows = length(scaffoldInRow)
+    # make one axis object per row:
+    axs = [Axis(f[i, 1], limits=(0, bpPerRow,
+            0, 1.15), ylabel="Fst") for i in 1:numRows]
+    for i in 1:numRows
+        hidexdecorations!(axs[i]) #hide background lattice and axis labels
+        hidespines!(axs[i], :t, :r, :b) # hide box around plot
+    end
+
+    for rowNum in 1:numRows
+        numScaffoldsInRow = length(scaffoldInRow[rowNum])
+        nextPlotShiftBP = 0
+        for orderNum in 1:numScaffoldsInRow
+            scaffoldName = scaffoldInRow[rowNum][orderNum]
+            plotBpLength = scaffold_lengths[findfirst(scaffolds_to_plot .== scaffoldName)]
+            # select one scaffold from the whole genome:
+            selection = windowed_pos_all.chrom .== scaffoldName
+            windowed_pos_selected = view(windowed_pos_all.mean_position, selection)
+            windowed_Fst_selected = view(windowed_Fst_all, :, selection)
+            if length(windowed_pos_selected) > 0  # only plot if there is data for that scaffold        
+                text!(axs[rowNum], scaffoldBpStartInRow[rowNum][orderNum] + 0.005bpPerRow, 1.05; text=scaffoldName, align=(:left, :center), fontsize=20)
+                for j in 1:length(groupsToPlotFst)
+                    xx = vcat(first(windowed_pos_selected), windowed_pos_selected, last(windowed_pos_selected)) .+ scaffoldBpStartInRow[rowNum][orderNum]
+                    FstRow = findfirst(pairwiseNamesFst .== groupsToPlotFst[j])
+                    yy = vcat(0, windowed_Fst_selected[FstRow, :], 0)
+                    poly!(axs[rowNum], Point2f.(xx, yy), color=(groupColorsFst[j], fillTransparency), strokecolor=(groupColorsFst[j], lineTransparency), strokewidth=1)
+                end
+            end
+        end
+    end
+    display(f)
+    return f
 end
 
 
