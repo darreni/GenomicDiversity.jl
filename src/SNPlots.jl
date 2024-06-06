@@ -32,7 +32,10 @@ export greet_SNPlots,
     getRollingMean,
     getWindowedFst,
     plotGenomeFst,
-    getWindowedIndHet
+    getWindowedIndHet,
+    standardizeIndHet,
+    getVarWindowedIndHet,
+    getWindowBoundaries
 
 using MultivariateStats
 using CairoMakie
@@ -795,6 +798,68 @@ function getWindowedIndHet(genotypes, pos, windowSize)
         rollingMeanHet[i,:] = getRollingMean(heterozygotes[i,:], windowSize)
     end
     return rollingMeanPos, rollingMeanHet
+end
+
+
+"""
+    standardizeIndHet(windowedIndHet)
+
+Divide each individual's windowed heterozgyosity by the average heterozygosity of all individuals (at each window).
+
+​# Arguments
+- `windowedIndHet`: The matrix of individual windowed heterozygosity values (rows are individuals; columns represent windowed genomic regions)
+
+# Notes
+Returns a matrix of standardized individual windowed heterozygosities.  
+"""
+function standardizeIndHet(windowedIndHet)
+    meanPerWindow_windowedIndHet = sum(windowedIndHet, dims=1) ./ size(windowedIndHet, 1)
+    windowedIndHet_standardized = Array{Float64,2}(undef, size(windowedIndHet, 1), size(windowedIndHet, 2))
+    for row in eachindex(windowedIndHet[:,1])
+        windowedIndHet_standardized[row, :] = windowedIndHet[row, :] ./ vec(meanPerWindow_windowedIndHet)
+    end
+    return windowedIndHet_standardized
+end
+
+
+"""
+    getVarWindowedIndHet(windowedIndHet_standardized)
+
+Calculate the windowed variance in standardized individual heterozygosity. 
+
+​# Arguments
+- `windowedIndHet_standardized`: The matrix of standardized individual windowed heterozygosity values (rows are individuals; columns represent windowed genomic regions)
+
+# Notes
+Returns a vector of variances in standardized individual heterozygosities (each value corresponds to a different windowed genomic region).  
+"""
+function getVarWindowedIndHet(windowedIndHet_standardized)
+    variancePerWindow_windowedIndHet = vec(var(windowedIndHet_standardized; dims=1))
+end
+
+
+"""
+    getWindowBoundaries(lociVector, windowSize)
+
+Determine the start and end scaffold positions for each window along a single scaffold. 
+
+​# Arguments
+- `lociVector`: Vector of included locus positions along a scaffold.
+- `windowSize`: Size of each window (in number of loci).
+
+# Notes
+- returns a Matrix, where rows represent windows and columns are starting location and ending location of each window along the scaffold. 
+"""
+function getWindowBoundaries(lociVector, windowSize)
+    numWindows = length(lociVector) ÷ windowSize  # this is the quotient (rounds to integer)
+    windowBoundaries = Matrix{Int}(undef, numWindows, 2) # set up place to store data
+    for i in 1:numWindows
+        startIndex = 1 + (i-1)*windowSize
+        endIndex = startIndex + windowSize - 1
+        windowBoundaries[i, 1] = lociVector[startIndex] # this is the position of the first locus in the window
+        windowBoundaries[i, 2] = lociVector[endIndex] # this is the position of the last locus in the window
+    end
+    return windowBoundaries
 end
 
 
