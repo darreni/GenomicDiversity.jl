@@ -237,6 +237,7 @@ function getFst(freqs, sampleSizes, groupsToCalc; among=false)
     return Fst, FstNum, FstDen, pairwiseNames
 end
 
+
 """
     limitIndsToPlot(plotGroups, numIndsToPlot, genoData, indMetadata)
 
@@ -247,13 +248,22 @@ Select a subset of individuals, based on numbers within each group, for subseque
 - `numIndsToPlot`: Vector of maximum number of individuals to include from each group (order as in `plotGroups`).
 - `genoData`: Matrix of genotypes (rows are individuals, columns are loci).
 - `indMetadata`: Matrix containing metadata for individuals (make sure there is an `Fst_group` column).
+- `sortByMissing`: Set to true to choose individuals with the least missing data among these loci.
 
 # Notes
 Returns a tuple containing:
 - Matrix of genotypes for included individuals.
 - Matrix of metadata for included individuals.
 """
-function limitIndsToPlot(plotGroups, numIndsToPlot, genoData, indMetadata)
+function limitIndsToPlot(plotGroups, numIndsToPlot, genoData, indMetadata;
+                            sortByMissing = false)
+    if sortByMissing
+        missingGenos = (genoData .== -1) .| ismissing.(genoData)
+        missingGenosPerInd = vec(sum(missingGenos, dims=2))
+        rankedOrderOfMissingPerInd = sortperm(missingGenosPerInd)
+        genoData = genoData[rankedOrderOfMissingPerInd, :]
+        indMetadata = indMetadata[rankedOrderOfMissingPerInd, :]
+    end
     cumulativeRowSelection = []
     for i in eachindex(plotGroups)
         rowSelection = findall(indMetadata.Fst_group .== plotGroups[i])
