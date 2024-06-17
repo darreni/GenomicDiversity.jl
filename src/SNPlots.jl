@@ -24,8 +24,10 @@ module SNPlots
 export greet_SNPlots,
     getFreqsAndSampleSizes,
     getSitePi,
+    getRegionPi,
     getPairwiseNames,
     getDxy,
+    getRegionDxy,
     getFst,
     limitIndsToPlot,
     plotPCA,
@@ -109,6 +111,23 @@ function getSitePi(freqs, sampleSizes)
 end
 
 
+"""
+    getRegionPi(sitePiMatrix)
+
+Given a matrix representing per-group (rows) per-site (columns) Pi values (within-group nucleotide diversity), produce a vector containing the mean pi for each group.
+"""
+function getRegionPi(sitePiMatrix)
+    meanPi = fill(-9.0, size(sitePiMatrix, 1))
+    for i in axes(sitePiMatrix, 1)
+        # get real values (ignore NaN):
+        nums = sitePi[i, .!isnan.(sitePiMatrix[i,:])]
+        # get mean of those real values:
+        meanPi[i] = mean(nums)
+    end
+    return meanPi
+end
+
+
 # function copied from IrwinLabGenomicsAnalysisScriptV2.jl :
 """
     getPairwiseNames(groupsToCalc)::Vector{String}
@@ -159,6 +178,23 @@ function getDxy(freqs, groupsToCalc)
         end
     end
     return Dxy, pairwiseNames
+end
+
+
+"""
+    getRegionDxy(siteDxyMatrix)
+
+Given a matrix representing per-population-pair (rows) per-site (columns) Dxy values (within-group nucleotide diversity), produce a vector containing the mean Dxy for each population pair.
+"""
+function getRegionDxy(siteDxyMatrix)
+    meanDxy = fill(-9.0, size(siteDxyMatrix, 1))
+    for i in axes(siteDxyMatrix, 1)
+        # get real values (ignore NaN):
+        nums = siteDxyMatrix[i, .!isnan.(siteDxyMatrix[i,:])]
+        # get mean of those real values:
+        meanDxy[i] = mean(nums)
+    end
+    return meanDxy
 end
 
 
