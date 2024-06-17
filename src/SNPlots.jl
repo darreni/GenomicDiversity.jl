@@ -120,7 +120,7 @@ function getRegionPi(sitePiMatrix)
     meanPi = fill(-9.0, size(sitePiMatrix, 1))
     for i in axes(sitePiMatrix, 1)
         # get real values (ignore NaN):
-        nums = sitePi[i, .!isnan.(sitePiMatrix[i,:])]
+        nums = sitePiMatrix[i, .!isnan.(sitePiMatrix[i,:])]
         # get mean of those real values:
         meanPi[i] = mean(nums)
     end
