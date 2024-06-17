@@ -122,7 +122,7 @@ function getRegionPi(sitePiMatrix)
         # get real values (ignore NaN):
         nums = sitePiMatrix[i, .!isnan.(sitePiMatrix[i,:])]
         # get mean of those real values:
-        meanPi[i] = mean(nums)
+        meanPi[i] = sum(nums) / length(nums)
     end
     return meanPi
 end
@@ -192,7 +192,7 @@ function getRegionDxy(siteDxyMatrix)
         # get real values (ignore NaN):
         nums = siteDxyMatrix[i, .!isnan.(siteDxyMatrix[i,:])]
         # get mean of those real values:
-        meanDxy[i] = mean(nums)
+        meanDxy[i] = sum(nums) / length(nums)
     end
     return meanDxy
 end
