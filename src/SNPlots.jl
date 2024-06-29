@@ -694,8 +694,6 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
 
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
 end
-```
-
 
 
 """
