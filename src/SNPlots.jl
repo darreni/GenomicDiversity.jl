@@ -503,6 +503,8 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `show_SNP_density`: Optional; default is `true` to show a density plot. 
 - `densityPlotColor`: Optional; default is `:steelblue1`
 - `plotTitle`: Optional; default will make a title. For no title, set to `""`.
+- `indColorLeftProvided`: Optional; Default is `false`. Set to `true` if there is a column labeled `indColorLeft` in the metadata providing color of each individual for plotting on left side.
+- `indColorRightProvided`: Optional; same as above but for right side (requires `indColorRight` column in metadata).
 
 # Notes
 Returns a tuple containing:
@@ -518,7 +520,9 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
                                     colorAllelesByGroup = true, group1 = plotGroups[1],
                                     indFontSize=10, figureSize=(1200, 1200),
                                     show_SNP_density = true, densityPlotColor = :steelblue1,
-                                    plotTitle = nothing)
+                                    plotTitle = nothing,
+                                    indColorLeftProvided = false,
+                                    indColorRightProvided = false)
 
     chr, positionMin, positionMax, regionText = regionInfo
     if isnothing(plotTitle)
@@ -598,9 +602,18 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
         CairoMakie.text!(label_x_left, y; text=labelText, align=(:right, :center), fontsize=indFontSize)
         # put sample label on left side:
         CairoMakie.text!(label_x_right, y; text=labelText, align=(:left, :center), fontsize=indFontSize)
-        boxColor = plotGroupColors[findfirst(plotGroups .== sorted_indMetadata_subset.Fst_group[i])]
-        CairoMakie.poly!(Point2f.(groupColorBox_x_left, (y .+ groupColorBox_y)), color=boxColor)
-        CairoMakie.poly!(Point2f.(groupColorBox_x_right, (y .+ groupColorBox_y)), color=boxColor)
+        if indColorLeftProvided
+            boxColorLeft = sorted_indMetadata_subset.indColorLeft[i]
+        else
+            boxColorLeft = plotGroupColors[findfirst(plotGroups .== sorted_indMetadata_subset.Fst_group[i])]
+        end
+        if indColorRightProvided
+            boxColorRight = sorted_indMetadata_subset.indColorRight[i]
+        else
+            boxColorRight = plotGroupColors[findfirst(plotGroups .== sorted_indMetadata_subset.Fst_group[i])]
+        end
+        CairoMakie.poly!(Point2f.(groupColorBox_x_left, (y .+ groupColorBox_y)), color=boxColorLeft)
+        CairoMakie.poly!(Point2f.(groupColorBox_x_right, (y .+ groupColorBox_y)), color=boxColorRight)
     end
 
     # generate my own plotting symbol (a rectangle)
@@ -681,6 +694,7 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
 
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
 end
+```
 
 
 
