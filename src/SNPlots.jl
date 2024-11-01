@@ -474,13 +474,15 @@ end
 
 """
     plotGenotypeByIndividual(regionInfo, pos, genoData, 
-                            indMetadata, freqs,
-                            plotGroups, plotGroupColors;
-                            missingFractionAllowed = 1.0,
-                            colorAllelesByGroup = true, group1 = plotGroups[1],
-                            indFontSize=10, figureSize=(1200, 1200),
-                            show_SNP_density = true, densityPlotColor = :steelblue1,
-                            plotTitle = nothing)
+                                indMetadata, freqs,
+                                plotGroups, plotGroupColors;
+                                missingFractionAllowed = 1.0,
+                                colorAllelesByGroup = true, group1 = plotGroups[1],
+                                indFontSize=10, figureSize=(1200, 1200),
+                                show_SNP_density = true, densityPlotColor = :steelblue1,
+                                plotTitle = nothing,
+                                indColorLeftProvided = false,
+                                indColorRightProvided = false)
 
 Construct a genotype-by-individual plot, with option to filter out SNPs with too much missing data. 
 
@@ -726,6 +728,9 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `show_SNP_density`: Optional; default is `true` to show a density plot. 
 - `densityPlotColor`: Optional; default is `:steelblue1`
 - `plotTitle`: Optional; default will make a title. For no title, set to `""`.
+- `highlightRegionStarts`: Optional; the left locations of regions to highlight on the scaffold.
+- `highlightRegionEnds`: Optional; the right locations of regions to highlight on the scaffold. 
+- `highlightRegionColor`: Optional; default red; the color of the highlight bar along the scaffold
 
 # Notes
 Returns a tuple containing:
@@ -740,7 +745,10 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
                             colorAllelesByGroup = true, group1 = plotGroups[1],
                             indFontSize=10, figureSize=(1200, 1200),
                             show_SNP_density = true, densityPlotColor = :steelblue1,
-                            plotTitle = nothing)
+                            plotTitle = nothing,
+                            highlightRegionStarts = [],
+                            highlightRegionEnds = [],
+                            highlightRegionColor = "red")
 
     chr, positionMin, positionMax, regionText = regionInfo
     if isnothing(plotTitle)
@@ -893,6 +901,15 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
         CairoMakie.lines!([i, 0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin)], [topHatchLine_y2, lowHatchLine_y1], color="grey20", linewidth=1)
         CairoMakie.lines!([0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin), 0.5 + chrPlotRatio * (SNP_positions_subset2[i] - positionMin)], [lowHatchLine_y1, lowHatchLine_y2], color="grey20", linewidth=1)
     end
+    # draw highlight regions on chromosome
+    highlightRegionLine_y = 0.5 - 0.21numInds
+    yValues = [highlightRegionLine_y, highlightRegionLine_y]
+    if length(highlightRegionStarts) > 0
+        for i in 1:length(highlightRegionStarts)
+            xValues = [0.5 + chrPlotRatio * (highlightRegionStarts[i] - positionMin), 0.5 + chrPlotRatio * (highlightRegionEnds[i] - positionMin)]
+            CairoMakie.lines!(xValues, yValues, color=highlightRegionColor, linewidth=18)
+        end
+    end
 
     if show_SNP_density
         # show SNP density plot, using an inset axis
@@ -918,6 +935,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
 
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
 end
+
 
 """
     getRollingMean(inputVector, windowSize)
