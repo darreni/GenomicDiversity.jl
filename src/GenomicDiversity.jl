@@ -1,11 +1,11 @@
 #= 
-GenoPlots.jl
+GenomicDiversity.jl
 This file started by Darren Irwin on 24 June 2023
 as a set of functions for processing and displaying SNP data.
     
 Converted to an actual package (private) with a Github repo on 11 November 2023.
 
-Changed name from SNPlots to GenoPlots on 14-15Nov2024
+Changed name from SNPlots to GenoPlots to GenomicDiversity on 15Nov2024
     =#
 
 # Useful site for developing packages: https://julialang.org/contribute/developing_package/
@@ -13,18 +13,18 @@ Changed name from SNPlots to GenoPlots on 14-15Nov2024
 # Notes for self, regarding the development version:
 # After making changes to this package, run: 
 # julia> ] # Go to the package mode
-# (GenoPlots) pkg> activate .
-# (GenoPlots) pkg> test # to run basic test
+# (GenomicDiversity) pkg> activate .
+# (GenomicDiversity) pkg> test # to run basic test
 # Then, where being used, need to run:
-# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/GenoPlots.jl")
-# using GenoPlots
+# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/GenomicDiversity.jl")
+# using GenomicDiversity
 
 
 
-module GenoPlots
+module GenomicDiversity
 
-# make functions available in calling namespace through "using GenoPlots" command, without needing to prefix module name: 
-export greet_GenoPlots,
+# make functions available in calling namespace through "using GenomicDiversity" command, without needing to prefix module name: 
+export greet_GenomicDiversity,
     getFreqsAndSampleSizes,
     getSitePi,
     getRegionPi,
@@ -49,12 +49,12 @@ using MultivariateStats
 using CairoMakie
 
 """
-    greet_GenoPlots()
+    greet_GenomicDiversity()
 
 A simple function for testing that the module has loaded.
 """
-function greet_GenoPlots()
-    greeting = "Hello I am the GenoPlots package!"
+function greet_GenomicDiversity()
+    greeting = "Hello I am the GenomicDiversity package!"
     println(greeting)
     return greeting
 end
@@ -1205,4 +1205,4 @@ function getWindowBoundaries(lociVector, windowSize)
 end
 
 
-end # of module GenoPlots
+end # of module GenomicDiversity

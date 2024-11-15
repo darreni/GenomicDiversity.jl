@@ -1,12 +1,12 @@
-using GenoPlots
+using GenomicDiversity
 using Test
 
-@testset "GenoPlots.jl greeting" begin
+@testset "GenomicDiversity.jl greeting" begin
     # Write your tests here.
-    @test GenoPlots.greet_GenoPlots() == "Hello I am the GenoPlots package!"
+    @test GenomicDiversity.greet_GenomicDiversity() == "Hello I am the GenomicDiversity package!"
 end
 
-@testset "GenoPlots.jl basic data" begin
+@testset "GenomicDiversity.jl basic data" begin
     # This is to test a simple dataset with 3 pops and 
     # all 3 genotypes and two kinds of missing data.
     basicData_genoData = [0 1 2 -1 missing;
