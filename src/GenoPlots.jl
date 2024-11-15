@@ -1,27 +1,30 @@
 #= 
-SNPlots.jl
+GenoPlots.jl
 This file started by Darren Irwin on 24 June 2023
 as a set of functions for processing and displaying SNP data.
     
 Converted to an actual package (private) with a Github repo on 11 November 2023.
+
+Changed name from SNPlots to GenoPlots on 14-15Nov2024
     =#
 
 # Useful site for developing packages: https://julialang.org/contribute/developing_package/
 
+# Notes for self, regarding the development version:
 # After making changes to this package, run: 
 # julia> ] # Go to the package mode
-# (SNPlots) pkg> activate .
-# (SNPlots) pkg> test # to run basic test
+# (GenoPlots) pkg> activate .
+# (GenoPlots) pkg> test # to run basic test
 # Then, where being used, need to run:
-# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/SNPlots.jl")
-# using SNPlots
+# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/GenoPlots.jl")
+# using GenoPlots
 
 
 
-module SNPlots
+module GenoPlots
 
-# make functions available in calling namespace through "using SNPlots" command, without needing to prefix module name: 
-export greet_SNPlots,
+# make functions available in calling namespace through "using GenoPlots" command, without needing to prefix module name: 
+export greet_GenoPlots,
     getFreqsAndSampleSizes,
     getSitePi,
     getRegionPi,
@@ -46,12 +49,12 @@ using MultivariateStats
 using CairoMakie
 
 """
-    greet_SNPlots()
+    greet_GenoPlots()
 
 A simple function for testing that the module has loaded.
 """
-function greet_SNPlots()
-    greeting = "Hello I am the SNPlots package!"
+function greet_GenoPlots()
+    greeting = "Hello I am the GenoPlots package!"
     println(greeting)
     return greeting
 end
@@ -1202,4 +1205,4 @@ function getWindowBoundaries(lociVector, windowSize)
 end
 
 
-end # of module SNPlots
+end # of module GenoPlots

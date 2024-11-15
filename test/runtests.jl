@@ -1,12 +1,12 @@
-using SNPlots
+using GenoPlots
 using Test
 
-@testset "SNPlots.jl greeting" begin
+@testset "GenoPlots.jl greeting" begin
     # Write your tests here.
-    @test SNPlots.greet_SNPlots() == "Hello I am the SNPlots package!"
+    @test GenoPlots.greet_GenoPlots() == "Hello I am the GenoPlots package!"
 end
 
-@testset "SNPlots.jl basic data" begin
+@testset "GenoPlots.jl basic data" begin
     # This is to test a simple dataset with 3 pops and 
     # all 3 genotypes and two kinds of missing data.
     basicData_genoData = [0 1 2 -1 missing;
