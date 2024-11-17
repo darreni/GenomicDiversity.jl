@@ -20,10 +20,8 @@ Irwin, D., S. Bensch, C. Charlebois, G. David, A. Geraldes, S.K. Gupta, B. Harr,
 
 ## Disclaimer
 
-The functions in this package were developed by Darren Irwin over a number of years, for use in various analyses. 
-They are now mature enough that I think it is an appropriate time to make them available as a Julia package.
-However, I am certain they could be improved in various ways. My intent is to revise and update this package over time, 
-and I welcome feedback and suggestions regarding how to best do so.
+The functions in this package were developed by [Darren Irwin](https://www.zoology.ubc.ca/~irwin/irwinlab/) over a number of years, for use in various analyses. 
+They are now mature enough that I think it is an appropriate time to make them available as a Julia package.However, I am certain they could be improved in various ways. My intent is to revise and update this package over time, and I welcome feedback and suggestions regarding how to best do so.
 
 ## Example analysis using GenomicDiversity.jl
 
@@ -170,3 +168,7 @@ The resulting plot:
 ![](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.jpg)
 
 The above shows genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F<sub>ST</sub> > 0.8) loci are shown.
+
+## Documentation
+
+Descriptions of all functions in the GenomicDiversity can be found [here](https://darreni.github.io/GenomicDiversity.jl/dev/).
