@@ -131,7 +131,7 @@ We can come up with a meaningful subset by examining variation on a single scaff
 and only showing the SNPs that strongly differ in allele frequency between chosen groups.
 
 We'll calculate allele frequencies and sample sizes for each group, 
-and then genetic differentiation (known as F~ST~) between the groups:
+and then genetic differentiation (known as F<sub>ST</sub>) between the groups:
 
 ```julia
 freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(genosOnly_with_missing,
@@ -167,4 +167,4 @@ The resulting plot:
 
 ![](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.jpg)
 
-The above shows genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F~ST~ > 0.8) loci are shown.
+The above shows genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F<sub>ST</sub> > 0.8) loci are shown.
