@@ -91,7 +91,7 @@ groups_to_plot = ["GCSP","PSWS","GWCS"]
 group_colors = ["gold","red","blue"]
 ```
 
-#### PCA
+### PCA
 
 If we want to use Principal Components Analysis (PCA) to visualize a good 2-dimensional representation
 of genomic relationships among individuals, we first need to impute missing genotypes.
@@ -118,14 +118,19 @@ PCAmodel = GenomicDiversity.plotPCA(imputed_genos, ind_with_metadata,
 PCAmodel.PCAfig  # shows the figure
 ```
 
-#### Genotype-by-individual plot of highly differentiated SNPs
+The resulting plot:
+
+![Genomic variation illustrated in 2 dimensions, showing Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_PCA.jpg)
+
+
+### Genotype-by-individual plot of highly differentiated SNPs
 
 Our overall dataset has close to 46,000 SNPs, far too many to visualize meaningfully in a single plot.
 We can come up with a meaningful subset by examining variation on a single scaffold (i.e., chromosome in this case)
 and only showing the SNPs that strongly differ in allele frequency between chosen groups.
 
 We'll calculate allele frequencies and sample sizes for each group, 
-and then genetic differentiation (known as F_ST) between the groups:
+and then genetic differentiation (known as F~ST~) between the groups:
 
 ```julia
 freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(genosOnly_with_missing,
@@ -156,3 +161,7 @@ plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(groupsToCompare,
     groups_to_plot, group_colors)
 plotInfo[1] # this outputs the plot
 ```
+
+The resulting plot:
+
+![Genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F~ST~ > 0.8) loci are shown.](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.jpg)
