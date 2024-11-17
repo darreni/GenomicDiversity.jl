@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/darreni/GenomicDiversity.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/darreni/GenomicDiversity.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://darreni.github.io/GenomicDiversity.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://darreni.github.io/GenomicDiversity.jl/dev)
 
 ## Description
 
