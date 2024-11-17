@@ -8,7 +8,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "https://github.com/darreni/GenomicDiversity.jl.git"
+    repo = "https://github.com/darreni/GenomicDiversity.jl"
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
