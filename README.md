@@ -120,8 +120,9 @@ PCAmodel.PCAfig  # shows the figure
 
 The resulting plot:
 
-![Genomic variation illustrated in 2 dimensions, showing Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_PCA.jpg)
+![](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_PCA.jpg)
 
+The above shows genomic variation illustrated in 2 dimensions, showing Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue.
 
 ### Genotype-by-individual plot of highly differentiated SNPs
 
@@ -164,4 +165,6 @@ plotInfo[1] # this outputs the plot
 
 The resulting plot:
 
-![Genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F~ST~ > 0.8) loci are shown.](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.jpg)
+![](demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.jpg)
+
+The above shows genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F~ST~ > 0.8) loci are shown.
