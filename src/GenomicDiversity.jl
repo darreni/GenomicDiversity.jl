@@ -80,15 +80,14 @@ Calculate allele frequencies and sample sizes for each group and SNP.
 Returns a tuple containing 1) a matrix of frequencies, and 2) a matrix of samples sizes (in both, rows are groups and columns are loci). 
 """
 function getFreqsAndSampleSizes(genoData, indGroup, groupsToCalc)
-    genoData[ismissing.(genoData)] .= -1 # if "missing" datatype is use, convert to -1
     groupCount = length(groupsToCalc)
     freqs = Array{Float32,2}(undef, groupCount, size(genoData, 2))
     sampleSizes = Array{Int16,2}(undef, groupCount, size(genoData, 2))
     for i in 1:groupCount
         selection = (indGroup .== groupsToCalc[i]) # gets the correct rows for individuals in the group 
-        geno0counts = sum(genoData[selection, :] .== 0, dims=1) # count by column the number of 0 genotypes (homozygous ref)
-        geno1counts = sum(genoData[selection, :] .== 1, dims=1) # same for 1 genotypes (heterozygous)
-        geno2counts = sum(genoData[selection, :] .== 2, dims=1) # same for 2 genotypes (homozygous alternate) 
+        geno0counts = sum(isequal.(genoData[selection, :], 0), dims=1) # count by column the number of 0 genotypes (homozygous ref)
+        geno1counts = sum(isequal.(genoData[selection, :], 1), dims=1) # same for 1 genotypes (heterozygous)
+        geno2counts = sum(isequal.(genoData[selection, :], 2), dims=1) # same for 2 genotypes (homozygous alternate) 
         sumGenoCounts = geno0counts .+ geno1counts .+ geno2counts
         sampleSizes[i, :] = sumGenoCounts
         freqs[i, :] = ((2 .* geno2counts) .+ geno1counts) ./ (2 * sumGenoCounts)
