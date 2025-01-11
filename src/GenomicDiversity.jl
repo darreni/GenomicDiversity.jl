@@ -532,9 +532,6 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
     if isnothing(plotTitle)
         plotTitle = string(regionText, ": genotypes of loci with < ", missingFractionAllowed, " missing")
     end
-    
-    # if the genoData has missing values, then convert to -1:
-    genoData[ismissing.(genoData)] .= -1
 
     # write ≥ using \ge tab, and ≤ using \le tab.
     # note the operator ".&" (bitwise &) is much more efficient than ".&&"
@@ -553,7 +550,7 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
     if colorAllelesByGroup
         altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
-        SNP_genotypes_subset[SNP_genotypes_subset.==3] .= -1
+        SNP_genotypes_subset[SNP_genotypes_subset .== 3] .= -1  # convert original -1 values back to -1
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
@@ -562,7 +559,7 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
     sorted_indMetadata_subset = indMetadata_subset[sortperm(indMetadata_subset.plot_order, rev=false), :]
 
     # filter out the SNPs that have too much missing data:
-    numberMissing = sum(sorted_SNP_genotypes_subset .== -1 .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
+    numberMissing = sum(isequal.(sorted_SNP_genotypes_subset, -1) .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
     fractionMissing = numberMissing / numInds
     selection = vec(fractionMissing .≤ missingFractionAllowed)
     sorted_SNP_genotypes_subset2 = sorted_SNP_genotypes_subset[:, selection]
@@ -756,9 +753,6 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     if isnothing(plotTitle)
         plotTitle = string(regionText, ": genotypes Fst>", Fst_cutoff, " loci between ", groupsToCompare)
     end
-    
-    # if the genoData has missing values, then convert to -1:
-    genoData[ismissing.(genoData)] .= -1
 
     # write ≥ using \ge tab, and ≤ using \le tab.
     # note the operator ".&" (bitwise &) is much more efficient than ".&&"
@@ -792,7 +786,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     if colorAllelesByGroup
         altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
-        SNP_genotypes_subset[SNP_genotypes_subset.==3] .= -1
+        SNP_genotypes_subset[SNP_genotypes_subset.==3] .= -1  # convert original -1 values back to -1
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
@@ -801,7 +795,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     sorted_indMetadata_subset = indMetadata_subset[sortperm(indMetadata_subset.plot_order, rev=false), :]
 
     # filter out the SNPs that have too much missing data:
-    numberMissing = sum(sorted_SNP_genotypes_subset .== -1 .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
+    numberMissing = sum(isequal.(sorted_SNP_genotypes_subset, -1) .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
     fractionMissing = numberMissing / numInds
     selection = vec(fractionMissing .≤ missingFractionAllowed)
     sorted_SNP_genotypes_subset2 = sorted_SNP_genotypes_subset[:, selection]
@@ -907,7 +901,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     highlightRegionLine_y = 0.5 - 0.21numInds
     yValues = [highlightRegionLine_y, highlightRegionLine_y]
     if length(highlightRegionStarts) > 0
-        for i in 1:length(highlightRegionStarts)
+        for i in eachindex(highlightRegionStarts)
             xValues = [0.5 + chrPlotRatio * (highlightRegionStarts[i] - positionMin), 0.5 + chrPlotRatio * (highlightRegionEnds[i] - positionMin)]
             CairoMakie.lines!(xValues, yValues, color=highlightRegionColor, linewidth=18)
         end
@@ -1175,7 +1169,7 @@ Calculate the windowed variance in standardized individual heterozygosity.
 Returns a vector of variances in standardized individual heterozygosities (each value corresponds to a different windowed genomic region).  
 """
 function getVarWindowedIndHet(windowedIndHet_standardized)
-    variancePerWindow_windowedIndHet = vec(var(windowedIndHet_standardized; dims=1))
+    variancePerWindow_windowedIndHet = vec(var(windowedIndHet_standardized; dims = 1))
 end
 
 
