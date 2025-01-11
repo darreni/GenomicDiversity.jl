@@ -544,13 +544,15 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
     SNP_freqs = freqs[:, selection_position]
     SNP_positions = pos.position[selection_position]
     SNP_genotypes_subset = SNP_genotypes[indMetadata.Fst_group .∈ Ref(plotGroups), :]
+    # convert missing to -99
+    SNP_genotypes_subset[ismissing.(SNP_genotypes_subset)] .= -99
+
     indMetadata_subset = indMetadata[indMetadata.Fst_group .∈ Ref(plotGroups), :]
     # The section below does the default of coloring the allele most common in group1 as the dark purple.
     # Otherwise, set colorAllelesByGroup=false to have the alleles colored according to ref vs. alternate 
     if colorAllelesByGroup
         altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
-        SNP_genotypes_subset[SNP_genotypes_subset .== 3] .= -1  # convert original -1 values back to -1
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
@@ -738,7 +740,7 @@ Returns a tuple containing:
 - the numerical positions (in the chosen scaffold) of the plotted loci
 - the sorted metadata matrix for the plotted individuals
 """
-function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFractionAllowed,
+function plotGenotypeByIndividualWithFstTEST(groupsToCompare, Fst_cutoff, missingFractionAllowed,
                             regionInfo, pos, Fst, pairwiseNamesFst,
                             genoData, indMetadata, freqs, plotGroups, plotGroupColors;
                             colorAllelesByGroup = true, group1 = plotGroups[1],
@@ -780,13 +782,15 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     SNP_freqs = freqs[:, selection]
     SNP_positions = pos.position[selection]
     SNP_genotypes_subset = SNP_genotypes[indMetadata.Fst_group .∈ Ref(plotGroups), :]
+    # convert missing to -99
+    SNP_genotypes_subset[ismissing.(SNP_genotypes_subset)] .= -99
+
     indMetadata_subset = indMetadata[indMetadata.Fst_group .∈ Ref(plotGroups), :]
     # The section below does the default of coloring the allele most common in group1 as the dark purple.
     # Otherwise, set colorAllelesByGroup=false to have the alleles colored according to ref vs. alternate 
     if colorAllelesByGroup
         altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
-        isequal.(SNP_genotypes_subset, 3) .= -1  # convert original -1 values back to -1
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
