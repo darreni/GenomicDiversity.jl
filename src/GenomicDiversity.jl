@@ -299,19 +299,22 @@ function limitIndsToPlot(plotGroups, numIndsToPlot, genoData, indMetadata;
         missingGenos = (genoData .== -1) .| ismissing.(genoData)
         missingGenosPerInd = vec(sum(missingGenos, dims=2))
         rankedOrderOfMissingPerInd = sortperm(missingGenosPerInd)
-        genoData = genoData[rankedOrderOfMissingPerInd, :]
-        indMetadata = indMetadata[rankedOrderOfMissingPerInd, :]
+        genoData2 = genoData[rankedOrderOfMissingPerInd, :]
+        indMetadata2 = indMetadata[rankedOrderOfMissingPerInd, :]
+    else
+        genoData2 = copy(genoData)
+        indMetadata2 = copy(indMetadata)
     end
     cumulativeRowSelection = []
     for i in eachindex(plotGroups)
-        rowSelection = findall(indMetadata.Fst_group .== plotGroups[i])
+        rowSelection = findall(indMetadata2.Fst_group .== plotGroups[i])
         if length(rowSelection) > numIndsToPlot[i]
             rowSelection = rowSelection[1:numIndsToPlot[i]]
         end
         cumulativeRowSelection = vcat(cumulativeRowSelection, rowSelection)
     end
-    genoData_included = genoData[cumulativeRowSelection, :]
-    indMetadata_included = indMetadata[cumulativeRowSelection, :]
+    genoData_included = genoData2[cumulativeRowSelection, :]
+    indMetadata_included = indMetadata2[cumulativeRowSelection, :]
     return genoData_included, indMetadata_included
 end
 
