@@ -485,7 +485,7 @@ end
                                 colorAllelesByGroup = true, group1 = plotGroups[1],
                                 indFontSize=10, figureSize=(1200, 1200),
                                 show_SNP_density = true, densityPlotColor = :steelblue1,
-                                plotTitle = nothing,
+                                plotTitle = nothing, titleFontSize = 20,
                                 indColorLeftProvided = false,
                                 indColorRightProvided = false)
 
@@ -510,6 +510,7 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `show_SNP_density`: Optional; default is `true` to show a density plot. 
 - `densityPlotColor`: Optional; default is `:steelblue1`
 - `plotTitle`: Optional; default will make a title. For no title, set to `""`.
+- `titleFontSize`; Optional; default is 20.
 - `indColorLeftProvided`: Optional; Default is `false`. Set to `true` if there is a column labeled `indColorLeft` in the metadata providing color of each individual for plotting on left side.
 - `indColorRightProvided`: Optional; same as above but for right side (requires `indColorRight` column in metadata).
 
@@ -527,7 +528,7 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
                                     colorAllelesByGroup = true, group1 = plotGroups[1],
                                     indFontSize=10, figureSize=(1200, 1200),
                                     show_SNP_density = true, densityPlotColor = :steelblue1,
-                                    plotTitle = nothing,
+                                    plotTitle = nothing, titleFontSize = 20,
                                     indColorLeftProvided = false,
                                     indColorRightProvided = false)
 
@@ -579,7 +580,7 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
         title = plotTitle,
         # xlabel = "location",
         # ylabel = "individual",
-        titlesize=30,
+        titlesize = titleFontSize,
         limits=(0.5 - 0.09 * (num_SNPs_to_plot), 0.5 + 1.09 * (num_SNPs_to_plot),
             0.5 - 0.3 * numInds, 0.5 + numInds)
     )
@@ -706,7 +707,13 @@ end
     plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFractionAllowed,
                             regionInfo, pos, Fst, pairwiseNamesFst,
                             genoData, indMetadata, freqs, plotGroups, plotGroupColors;
-                            colorAllelesByGroup=true, group1=plotGroups[1])
+                            colorAllelesByGroup = true, group1 = plotGroups[1],
+                            indFontSize=10, figureSize=(1200, 1200),
+                            show_SNP_density = true, densityPlotColor = :steelblue1,
+                            plotTitle = nothing, titleFontSize = 20,
+                            highlightRegionStarts = [],
+                            highlightRegionEnds = [],
+                            highlightRegionColor = "red")
 
 Construct a genotype-by-individual plot, including only loci that pass thresholds for Fst and missing data. 
 
@@ -732,6 +739,7 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `show_SNP_density`: Optional; default is `true` to show a density plot. 
 - `densityPlotColor`: Optional; default is `:steelblue1`
 - `plotTitle`: Optional; default will make a title. For no title, set to `""`.
+- `titleFontSize`; Optional; default is `20`.
 - `highlightRegionStarts`: Optional; the left locations of regions to highlight on the scaffold.
 - `highlightRegionEnds`: Optional; the right locations of regions to highlight on the scaffold. 
 - `highlightRegionColor`: Optional; default red; the color of the highlight bar along the scaffold
@@ -749,7 +757,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
                             colorAllelesByGroup = true, group1 = plotGroups[1],
                             indFontSize=10, figureSize=(1200, 1200),
                             show_SNP_density = true, densityPlotColor = :steelblue1,
-                            plotTitle = nothing,
+                            plotTitle = nothing, titleFontSize = 20,
                             highlightRegionStarts = [],
                             highlightRegionEnds = [],
                             highlightRegionColor = "red")
@@ -819,7 +827,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
         title = plotTitle,
         # xlabel = "location",
         # ylabel = "individual",
-        titlesize=30,
+        titlesize = titleFontSize,
         limits=(0.5 - 0.09 * (num_SNPs_to_plot), 0.5 + 1.09 * (num_SNPs_to_plot),
             0.5 - 0.3 * numInds, 0.5 + numInds)
     )
