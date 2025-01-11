@@ -630,21 +630,21 @@ function plotGenotypeByIndividual(regionInfo, pos, genoData,
         y = numInds + 1 - i  # y is location for plotting; this reverses order of plot top-bottom
         CairoMakie.lines!([0.5, num_SNPs_to_plot + 0.5], [y, y], color="grey40")
         genotypes = sorted_SNP_genotypes_subset2[i, :]
-        hom_ref_locs = findall(genotypes .== 0)
+        hom_ref_locs = findall(isequal.(genotypes, 0))
         if length(hom_ref_locs) > 0
             for j in eachindex(hom_ref_locs)
                 CairoMakie.poly!(Point2f.((hom_ref_locs[j] .+ box_x), (y .+ box_y)), color=genotypeColors[1])
                 #polygon(hom.ref.locs[j]+symbol.x, y+symbol.y, border=NA, col=genotype.colors[1])
             end
         end
-        het_locs = findall(genotypes .== 1)
+        het_locs = findall(isequal.(genotypes, 1))
         if length(het_locs) > 0
             for j in eachindex(het_locs)
                 CairoMakie.poly!(Point2f.((het_locs[j] .+ triangle1_x), (y .+ triangle1_y)), color=genotypeColors[1])
                 CairoMakie.poly!(Point2f.((het_locs[j] .+ triangle2_x), (y .+ triangle2_y)), color=genotypeColors[3])
             end
         end
-        hom_alt_locs = findall(genotypes .== 2)
+        hom_alt_locs = findall(isequal.(genotypes, 2))
         if length(hom_alt_locs) > 0
             for j in eachindex(hom_alt_locs)
                 CairoMakie.poly!(Point2f.((hom_alt_locs[j] .+ box_x), (y .+ box_y)), color=genotypeColors[3])
@@ -786,7 +786,7 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     if colorAllelesByGroup
         altAlleleHiInGroup1 = SNP_freqs[findfirst(plotGroups .== group1), :] .> 0.5
         SNP_genotypes_subset[:, altAlleleHiInGroup1] = 2 .- SNP_genotypes_subset[:, altAlleleHiInGroup1]
-        SNP_genotypes_subset[SNP_genotypes_subset.==3] .= -1  # convert original -1 values back to -1
+        isequal.(SNP_genotypes_subset, 3) .= -1  # convert original -1 values back to -1
     end
     # Choose sorting order by plot_order column in input metadata file
     #sorted.SNP.genotypes.subset = SNP.genotypes.subset[order(SNP.genotypes.subset$group, SNP.genotypes.subset$ID),]
@@ -795,7 +795,9 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     sorted_indMetadata_subset = indMetadata_subset[sortperm(indMetadata_subset.plot_order, rev=false), :]
 
     # filter out the SNPs that have too much missing data:
-    numberMissing = sum(isequal.(sorted_SNP_genotypes_subset, -1) .| ismissing.(sorted_SNP_genotypes_subset), dims=1)
+    numberMissing = sum(isequal.(sorted_SNP_genotypes_subset, -1) .| 
+                        isequal.(sorted_SNP_genotypes_subset, 3) .|
+                        ismissing.(sorted_SNP_genotypes_subset), dims=1)
     fractionMissing = numberMissing / numInds
     selection = vec(fractionMissing .≤ missingFractionAllowed)
     sorted_SNP_genotypes_subset2 = sorted_SNP_genotypes_subset[:, selection]
@@ -857,21 +859,21 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
         y = numInds + 1 - i  # y is location for plotting; this reverses order of plot top-bottom
         CairoMakie.lines!([0.5, num_SNPs_to_plot + 0.5], [y, y], color="grey40")
         genotypes = sorted_SNP_genotypes_subset2[i, :]
-        hom_ref_locs = findall(genotypes .== 0)
+        hom_ref_locs = findall(isequal.(genotypes, 0))
         if length(hom_ref_locs) > 0
             for j in eachindex(hom_ref_locs)
                 CairoMakie.poly!(Point2f.((hom_ref_locs[j] .+ box_x), (y .+ box_y)), color=genotypeColors[1])
                 #polygon(hom.ref.locs[j]+symbol.x, y+symbol.y, border=NA, col=genotype.colors[1])
             end
         end
-        het_locs = findall(genotypes .== 1)
+        het_locs = findall(isequal.(genotypes, 1))
         if length(het_locs) > 0
             for j in eachindex(het_locs)
                 CairoMakie.poly!(Point2f.((het_locs[j] .+ triangle1_x), (y .+ triangle1_y)), color=genotypeColors[1])
                 CairoMakie.poly!(Point2f.((het_locs[j] .+ triangle2_x), (y .+ triangle2_y)), color=genotypeColors[3])
             end
         end
-        hom_alt_locs = findall(genotypes .== 2)
+        hom_alt_locs = findall(isequal.(genotypes, 2))
         if length(hom_alt_locs) > 0
             for j in eachindex(hom_alt_locs)
                 CairoMakie.poly!(Point2f.((hom_alt_locs[j] .+ box_x), (y .+ box_y)), color=genotypeColors[3])
