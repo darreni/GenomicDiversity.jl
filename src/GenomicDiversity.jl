@@ -740,7 +740,7 @@ Returns a tuple containing:
 - the numerical positions (in the chosen scaffold) of the plotted loci
 - the sorted metadata matrix for the plotted individuals
 """
-function plotGenotypeByIndividualWithFstTEST(groupsToCompare, Fst_cutoff, missingFractionAllowed,
+function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFractionAllowed,
                             regionInfo, pos, Fst, pairwiseNamesFst,
                             genoData, indMetadata, freqs, plotGroups, plotGroupColors;
                             colorAllelesByGroup = true, group1 = plotGroups[1],
