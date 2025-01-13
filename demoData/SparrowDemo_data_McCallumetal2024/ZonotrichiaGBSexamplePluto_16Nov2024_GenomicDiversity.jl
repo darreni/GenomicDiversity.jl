@@ -151,7 +151,7 @@ MultivariateStats = "~0.10.3"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.2"
 manifest_format = "2.0"
 project_hash = "26922ec354b919c15713b95e77685e96ecd81e26"
 
