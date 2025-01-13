@@ -42,8 +42,9 @@ export greet_GenomicDiversity,
     plotGenomeFst,
     getWindowedIndHet,
     standardizeIndHet,
-    getVarWindowedIndHet,
-    getWindowBoundaries
+    getWindowedViSHet,
+    getWindowBoundaries,
+    plotGenomeViSHet
 
 using MultivariateStats
 using CairoMakie
@@ -456,9 +457,9 @@ Designate a specific region of a chromosome for subsequent analysis.
 
 # Notes
 Returns a tuple containing:
-- the scaffold name.
-- the minimum position.
-- the maximum position.
+- the scaffold name
+- the minimum position
+- the maximum position
 - a string describing the region (e.g. `chr Z: 20000 to 1000000`)
 
 This function does not actually filter the genotype matrix--that can be done by providing the output of this to functions such as `plotGenotypeByIndividual()`.
@@ -742,7 +743,7 @@ Under the default setting, alleles are colored (dark purple vs. light purple) ac
 - `titleFontSize`; Optional; default is `20`.
 - `highlightRegionStarts`: Optional; the left locations of regions to highlight on the scaffold.
 - `highlightRegionEnds`: Optional; the right locations of regions to highlight on the scaffold. 
-- `highlightRegionColor`: Optional; default red; the color of the highlight bar along the scaffold
+- `highlightRegionColor`: Optional; default red; the color of the highlight bar along the scaffold.
 
 # Notes
 Returns a tuple containing:
@@ -995,9 +996,9 @@ This is calculated according to Weir&Cockerham1984 (with sample size and pop num
 - `windowSize`: An integer indicating the window number of values to include in each mean.
 
 # Notes
-- returns a tuple of two vectors: rolling mean position, and rolling mean Fst
-- the calculations ignore NaN values (which would be in both numerator and denominator)
-- returns NaN for a window if there are no real values in the window 
+- Returns a tuple of two vectors: rolling mean position, and rolling mean Fst.
+- The calculations ignore NaN values (which would be in both numerator and denominator).
+- Returns NaN for a window if there are no real values in the window. 
 """
 function getWindowedFst(FstNumerator, FstDenominator, pos, windowSize)
     rollingMeanPos = getRollingMean(pos.position, windowSize) # get per-window mean SNP position along scaffold
@@ -1030,10 +1031,10 @@ Plot windowed Fst along chromosomal regions, for multiple population comparisons
 - `pairwiseNamesFst`: a vector of names indicating the pairs of populations in rows of `windowed_Fst_all`.
 - `windowed_pos_all`: dataframe containing genomic locations of windows (must have columns `chrom` and `mean_position`).
 - `groupsToPlotFst`: a vector of strings indicating the population comparisons to include.
-- `groupColorsFst`: the colors to use to plot the comparisons in `groupsToPlotFst`
-- `lineTransparency` (optional): transparency of the lines
-- `fillTransparency` (optional): transparency of the fill color
-- `figureSize` (optional): size of the figure (hight, width)
+- `groupColorsFst`: the colors to use to plot the comparisons in `groupsToPlotFst`.
+- `lineTransparency` (optional): transparency of the lines.
+- `fillTransparency` (optional): transparency of the fill color.
+- `figureSize` (optional): size of the figure (height, width).
 
 # Notes
 - Returns the figure.
@@ -1175,9 +1176,9 @@ end
 
 
 """
-    getVarWindowedIndHet(windowedIndHet_standardized)
+    getWindowedViSHet(windowedIndHet_standardized)
 
-Calculate the windowed variance in standardized individual heterozygosity. 
+Calculate the windowed Variance in Standardized Heterozygosity (ViSHet). 
 
 ​# Arguments
 - `windowedIndHet_standardized`: The matrix of standardized individual windowed heterozygosity values (rows are individuals; columns represent windowed genomic regions)
@@ -1185,8 +1186,8 @@ Calculate the windowed variance in standardized individual heterozygosity.
 # Notes
 Returns a vector of variances in standardized individual heterozygosities (each value corresponds to a different windowed genomic region).  
 """
-function getVarWindowedIndHet(windowedIndHet_standardized)
-    variancePerWindow_windowedIndHet = vec(var(windowedIndHet_standardized; dims = 1))
+function getWindowedViSHet(windowedIndHet_standardized)
+    vec(var(windowedIndHet_standardized; dims = 1))
 end
 
 
@@ -1212,6 +1213,132 @@ function getWindowBoundaries(lociVector, windowSize)
         windowBoundaries[i, 2] = lociVector[endIndex] # this is the position of the last locus in the window
     end
     return windowBoundaries
+end
+
+
+"""
+    plotGenomeViSHet(scaffolds_to_plot, 
+                    windowed_ViSHet_all,
+                    windowed_pos_all;
+                    fillColor = "purple",
+                    lineTransparency = 0.8,
+                    fillTransparency = 0.2,
+                    figureSize = (1200, 1200),
+                    plotRegions = false,
+                    regionsToPlot = [],
+                    regionColor = "red")
+
+Plot windowed Variance in Standardized Heterozygosity (ViSHet) along multiple scaffolds.
+
+​# Arguments
+- `scaffolds_to_plot`: a vector of the scaffold names to include in the plot.
+- `windowed_ViSHet_all`: a vector of ViSHet values for windows of the genome.
+- `windowed_pos_all`: dataframe containing genomic locations of windows (must have columns `chrom` and `mean_position`).
+- `fillColor` (optional): the color for the lines and fill (default `"purple"`).
+- `lineTransparency` (optional): transparency of the lines.
+- `fillTransparency` (optional): transparency of the fill color.
+- `figureSize` (optional): size of the figure (height, width).
+- `plotRegions` (optional): choose `true` to highlight regions.
+- `regionsToPlot` (optional): a DataFrame with three columns: `regionChrom` containing names of scaffolds, `regionStart` and `regionEnd` giving start and end of regions to highlight.
+- `regionColor` (optional): the color for the highlighted regions.
+
+# Notes
+- Returns the figure.
+"""
+function plotGenomeViSHet(scaffolds_to_plot, 
+                            windowed_ViSHet_all,
+                            windowed_pos_all;
+                            fillColor = "purple",
+                            lineTransparency = 0.8,
+                            fillTransparency = 0.2,
+                            figureSize = (1200, 1200),
+                            plotRegions = false,
+                            regionsToPlot = [],
+                            regionColor = "red")
+    
+    # get sizes of chromosomes (note this actually isn't the true length, just the mean position of the rightmost window):
+    scaffoldLengths = repeat([-1], length(scaffolds_to_plot))	# vector of Int64
+    for i in 1:length(scaffolds_to_plot)
+        selection = windowed_pos_all.chrom .== scaffolds_to_plot[i]
+        if sum(selection) == 0
+            scaffoldLengths[i] = 0
+        else
+            scaffoldLengths[i] = round(Int, maximum(windowed_pos_all.mean_position[selection]))
+        end
+    end
+
+    # my plan is to use the layout feature of Makie to make one axis per row, and then plot
+    # multiple scaffolds to each row
+
+    scaffoldPlottedAlready = falses(length(scaffolds_to_plot))
+    bpPerRow = 200_000_000
+    bpGapBetweenScaffolds = 10_000_000
+    scaffoldInRow = Vector{Vector{String}}() # declare a vector of vectors to store the chromosome names per row
+    scaffoldBpStartInRow = Vector{Vector{Int}}()
+    row = 1
+
+    while sum(scaffoldPlottedAlready .== false) > 0  # repeat until all chr have a row to be plotted in
+        bpStart = 0
+        remainingRowLength = bpPerRow
+        push!(scaffoldInRow, []) # initialize an empty vector for the next row
+        push!(scaffoldBpStartInRow, []) # initialize an empty vector for the next row
+        placeInRow = 1
+        # look through chromosomes and find some to go in this row
+        for i in 1:length(scaffolds_to_plot)
+            # if not plotted and short enough, add to row:
+            if scaffoldPlottedAlready[i] .== false .&& scaffoldLengths[i] .<= remainingRowLength
+                push!(scaffoldInRow[row], scaffolds_to_plot[i])
+                push!(scaffoldBpStartInRow[row], bpStart)
+                remainingRowLength = remainingRowLength - scaffoldLengths[i] - bpGapBetweenScaffolds
+                scaffoldPlottedAlready[i] = true
+                placeInRow += 1
+                bpStart = bpStart + scaffoldLengths[i] + bpGapBetweenScaffolds
+            end	
+        end
+        row += 1
+    end
+    println(scaffoldInRow)
+
+    # Plot in the order defined above
+    f = CairoMakie.Figure(size=figureSize)
+    numRows = length(scaffoldInRow)
+    # make one axis object per row:
+    axs = [Axis(f[i, 1], limits=(0, bpPerRow,
+            -0.45, 2.0), ylabel = "ViSHet") for i in 1:numRows]
+    for i in 1:numRows
+        hidexdecorations!(axs[i]) #hide background lattice and axis labels
+        hidespines!(axs[i], :t, :r, :b) # hide box around plot
+    end
+
+    for rowNum in 1:numRows
+        numScaffoldsInRow = length(scaffoldInRow[rowNum])
+        nextPlotShiftBP = 0
+        for orderNum in 1:numScaffoldsInRow 
+            scaffoldName = scaffoldInRow[rowNum][orderNum]
+            plotBpLength = scaffoldLengths[findfirst(scaffolds_to_plot .== scaffoldName)]
+            # select one scaffold from the whole genome:
+            selection = windowed_pos_all.chrom .== scaffoldName 
+            windowed_pos_selected = view(windowed_pos_all.mean_position, selection)
+            windowed_ViSHet_selected = view(windowed_ViSHet_all, selection)
+            if length(windowed_pos_selected) > 0  # only plot if there is data for that scaffold        
+                text!(axs[rowNum], scaffoldBpStartInRow[rowNum][orderNum] + 0.005bpPerRow, -0.2; text=scaffoldName, align=(:left, :center), fontsize=20)
+                xx = vcat(first(windowed_pos_selected), windowed_pos_selected, last(windowed_pos_selected)) .+ scaffoldBpStartInRow[rowNum][orderNum]
+                yy = vcat(0, windowed_ViSHet_selected, 0)
+                poly!(axs[rowNum], Point2f.(xx, yy), color = (fillColor, fillTransparency), strokecolor = (fillColor, lineTransparency), strokewidth = 1)
+                # if indicating regions (e.g. that have high ViSHet)
+                if plotRegions
+                    regionsToPlot_thisScaffold = regionsToPlot[regionsToPlot.regionChrom .== scaffoldName, :]
+                    for i in eachindex(regionsToPlot_thisScaffold.regionStart)
+                        xValues = [regionsToPlot_thisScaffold.regionStart[i], regionsToPlot_thisScaffold.regionEnd[i]] .+ scaffoldBpStartInRow[rowNum][orderNum]
+                        yValues = [0.05, 0.05]
+                        lines!(axs[rowNum], xValues, yValues, color=regionColor, linewidth=10)
+                    end
+                end
+            end
+        end
+    end
+    display(f)
+    return f
 end
 
 
