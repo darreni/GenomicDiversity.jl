@@ -3,7 +3,7 @@ using GenomicDiversity
 
 makedocs(
     sitename = "GenomicDiversity",
-    format = Documenter.HTML(),
+    format = Documenter.HTML(sidebar_sitename = false),
     modules = [GenomicDiversity]
 )
 
