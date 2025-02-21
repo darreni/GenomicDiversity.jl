@@ -4,6 +4,8 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://darreni.github.io/GenomicDiversity.jl/dev)
 
+<img src="src/assets/logo.jpg" width="250" height="125">
+
 ## Description
 
 GenomicDiversity is a Julia package for the analysis of genomic variation within and among multiple populations. 
