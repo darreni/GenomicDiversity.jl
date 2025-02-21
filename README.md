@@ -4,7 +4,7 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://darreni.github.io/GenomicDiversity.jl/dev)
 
-<img src="src/assets/logo.jpg" width="250" height="125">
+<img src="src/assets/logo.jpg" width="350" height="215">
 
 ## Description
 
