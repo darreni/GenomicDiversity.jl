@@ -41,11 +41,11 @@ and outputted the information in three files:
 * a `.indv` file containing individual identifiers (corresponding to rows of the genotype matrix)
 * a `.pos` file providing the locations of loci in the genome (with rows representing loci, column 1 indicating the scaffold, and column 2 indicating the position along that scaffold)
 
-First, we'll do some setup (loading packages and data):
+First, we'll do some setup (loading packages and filenames):
 
 ```julia
 # load required packages
-using MultivariateStats, CairoMakie, DataFrames, CSV, DelimitedFiles
+using GenomicDiversity, MultivariateStats, CairoMakie, DataFrames, CSV, DelimitedFiles
 
 # set data file names
 genotype_file_name = "SparrowDemo_genotypes.012"
