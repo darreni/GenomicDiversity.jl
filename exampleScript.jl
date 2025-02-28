@@ -5,8 +5,8 @@
 
 using MultivariateStats, CairoMakie, DataFrames, CSV, DelimitedFiles, Impute
 
-#import Pkg; Pkg.add(path="/Users/darrenirwin/Documents/Github_repos_MacBookPro/GenomicDiversity.jl")
-#using GenomicDiversity
+import Pkg; Pkg.add(path="https://github.com/darreni/GenomicDiversity.jl")
+using GenomicDiversity
 
 # set data file names
 pathName = "demoData/SparrowDemo_data_McCallumetal2024/"
