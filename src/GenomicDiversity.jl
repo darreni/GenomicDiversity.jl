@@ -16,7 +16,7 @@ Changed name from SNPlots to GenoPlots to GenomicDiversity on 15Nov2024
 # (GenomicDiversity) pkg> activate .
 # (GenomicDiversity) pkg> test # to run basic test
 # Then, where being used, need to run:
-# import Pkg; Pkg.add(path="/Users/darrenirwin/.julia/dev/GenomicDiversity.jl")
+# import Pkg; Pkg.add(path="/Users/darrenirwin/Documents/Github_repos_MacBookPro/GenomicDiversity.jl")
 # using GenomicDiversity
 
 
@@ -25,6 +25,9 @@ module GenomicDiversity
 
 # make functions available in calling namespace through "using GenomicDiversity" command, without needing to prefix module name: 
 export greet_GenomicDiversity,
+    GenoData,
+    loadGenoData,
+    imputeMissingGenotypes,
     getFreqsAndSampleSizes,
     getSitePi,
     getRegionPi,
@@ -46,8 +49,12 @@ export greet_GenomicDiversity,
     getWindowBoundaries,
     plotGenomeViSHet
 
-using MultivariateStats
-using CairoMakie
+using MultivariateStats,
+    CairoMakie,
+    DataFrames, 
+    CSV, 
+    DelimitedFiles, 
+    Impute
 
 """
     greet_GenomicDiversity()
@@ -60,13 +67,113 @@ function greet_GenomicDiversity()
     return greeting
 end
 
+"""
+    GenoData(indInfo::DataFrame, genotypes::Matrix, positions::DataFrame)
 
-# function copied from IrwinLabGenomicsAnalysisScriptV2.jl :
-# calculate sample size (of individuals) and frequency of alternate allele. 
-# genoData is Matrix where rows are individuals and columns are loci.
-# indGroup is a vector of group names indicating the group each individual belongs to.
-# groupsToCalc is a vector of group names for which freqs and sample sizes will be calculated.
-# (homozygote alt coded as 2; heterozygote as 1, ref homozygote as 0, missing as -1 or missing)
+Constructs a `GenoData` struct, which stores metadata of individuals, a genotype matrix of individuals and SNPS, and genomic position info.
+
+​# Arguments / keywords
+- `indInfo`: A DataFrame containing metadata.
+- `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
+- `positions`: A 2-column DataFrame containing genomic location info of SNPs.
+
+# Notes
+You can access each component of this data structure by appending ".indInfo" or ".genotypes" or "positions" to the name of the GenoData object.
+"""
+mutable struct GenoData
+    indInfo::DataFrame
+    genotypes::Matrix
+    positions::DataFrame
+    function GenoData(indInfo::DataFrame, genotypes::Matrix, positions::DataFrame)
+        if size(indInfo, 1) != size(genotypes, 1)
+            error("number of individuals (rows) differs between metadata dataframe and genotype matrix")
+        end
+        if size(genotypes, 2) != size(positions, 1)
+            error("number of positions differs between genotype matrix and positions dataframe")
+        end
+        new(indInfo, genotypes, positions)
+    end
+end
+
+"""
+    loadGenoData(metadataFile, individualsFile, genotypesFile, positionsFile)
+
+Imports data from four files and builds a `GenoData` object. 
+
+​# Arguments
+- `metadataFile`: The path and name of the metadata file.
+- `individualsFile`: The path and name of the file providing names of the individuals (corresponding to rows of the genotype matrix).
+- `genotypesFile`: The path and name of the file containing the matrix of genotypes.
+- `positionsFile`: The path and name of the file containing the genomic position info of the loci corresponding to columns of the genotype matrix.
+
+# Notes
+Returns a `GenoData`` object, containing:
+- `indInfo`: A DataFrame containing metadata.
+- `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
+- `positions`: A 2-column DataFrame containing genomic location info of SNPs.
+"""
+function loadGenoData(metadataFile, individualsFile, genotypesFile, positionsFile)
+    # load the metadata
+    indMetadata = DataFrame(CSV.File(metadataFile))  # uses CSV, DataFrames packages
+    # load the list of individuals
+    indNames = DataFrame(CSV.File(individualsFile; header=["ind"], types=[String]))
+    # check that rows in each imported object are the same:
+    if nrow(indMetadata) != size(indNames, 1)
+        error("Number of rows in metadataFile different than number of individuals in individualsFile")
+    end
+    # put individual names and metadata together, to enable easy confirmation that they match
+    indNames_with_indMetadata = hcat(indNames, indMetadata)
+    if hasproperty(indNames_with_indMetadata, "ID")
+        if indNames_with_indMetadata.ind != indNames_with_indMetadata.ID
+            println("WARNING: Individual names differ between $metadataFile and $individualsFile")
+        end
+    end
+    # load the genomic positions of loci
+    positions = DataFrame(CSV.File(positionsFile; header=["chrom", "position"], types=[String, Int]))
+    # load the genotype matrix
+    geno = readdlm(genotypesFile, '\t', Int16, '\n')  # uses DelimitedFiles package
+    genosOnly = geno[:, Not(1)] #remove first column, which was just a row index
+    if nrow(positions) != size(genosOnly, 2)
+        error("Number of loci differs between $genotypesFile and $positionsFile")
+    end
+    println(string("Have read in genotypic data at ", size(genosOnly, 2)," loci for ", size(genosOnly, 1), " individuals. \n"))
+    return GenoData(indNames_with_indMetadata, genosOnly, positions)
+end
+
+"""
+    imputeMissingGenotypes(genotypeMatrix::Matrix; method = "SVD")
+
+Imputes missing values in the genotype matrix.
+
+​# Arguments
+- `genotypeMatrix`: Matrix of genotypes, where missing data are indicated with either `-1` or `missing`.
+- `method`: The method used for imputing. Presently "SVD" is the only option (and default).  
+
+# Notes
+Returns the genotype matrix with filled-in missing values, of type Float32. 
+"""
+function imputeMissingGenoData(genotypeMatrix::Matrix; method = "SVD")
+    T = eltype(genotypeMatrix)  # get the types of the cells, to use in next line
+    genotypeMatrixWithMissing = Matrix{Union{Missing, T}}(genotypeMatrix)  # allow missing type
+    replace!(genotypeMatrixWithMissing, -1 => missing)
+    # convert to Float32 numbers
+    genotypeMatrixWithMissing = Matrix{Union{Missing, Float32}}(genotypeMatrixWithMissing) 
+    # impute the missing genotypes
+    println("Imputing now. Thanks for your patience, as this may take some time.")
+    return Impute.svd(genotypeMatrixWithMissing)  # uses Impute package
+end
+
+"""
+    imputeMissingGenotypes(myGenoData::GenoData; method = "SVD")
+
+When applied to a GenoData object, imputes the data in the genotypes object, and returns a new GenoData object.
+"""
+function imputeMissingGenoData(myGenoData::GenoData; method = "SVD")
+    genotypesImputed = imputeMissingGenoData(myGenoData.genotypes; method = "SVD")
+    return GenoData(myGenoData.indInfo, genotypesImputed, myGenoData.positions)
+end
+
+
 """
     getFreqsAndSampleSizes(genoData, indGroup, groupsToCalc)
 
@@ -96,6 +203,15 @@ function getFreqsAndSampleSizes(genoData, indGroup, groupsToCalc)
     return freqs, sampleSizes
 end
 
+"""
+    getFreqsAndSampleSizes(myGenoData::GenoData, groupsToCalc)
+
+Call getFreqsAndSampleSizes() using a `GenoData` object as input.
+"""
+function getFreqsAndSampleSizes(myGenoData::GenoData, groupsToCalc)
+    return getFreqsAndSampleSizes(myGenoData.genotypes,
+                                    myGenoData.indInfo.Fst_group, groupsToCalc)
+end
 
 """
     getSitePi(freqs, sampleSizes)
@@ -437,6 +553,29 @@ function plotPCA(genotypes, indMetadata, groups_to_plot_PCA, group_colors_PCA;
     return (model = PCA_indGenos, metadata = indMetadata_groupSelected, values = PCA_values, PC1 = PC1, PC2 = PC2, PCAfig = f)
 end
 
+"""
+    plotPCA(myGenoData::GenoData, groups_to_plot_PCA, group_colors_PCA; sampleSet = "", regionText="", flip1 = false, flip2 = false)
+
+Apply the plotPCA function to a `GenoData`` object.
+"""
+function plotPCA(myGenoData::GenoData, groups_to_plot_PCA, group_colors_PCA; 
+                    sampleSet = "", regionText="",
+                    flip1 = false, flip2 = false,
+                    showPlot = true, autolimitaspect_setting = 1,
+                    lineOpacity = 0.8, fillOpacity = 0.2,
+                    symbolSize = 10, plotTitle = nothing, showTitle = true,
+                    xLabelText = "Genomic PC1", yLabelText = "Genomic PC2",
+                    labelSize = 24)
+    return plotPCA(myGenoData.genotypes, myGenoData.indInfo, groups_to_plot_PCA, group_colors_PCA; 
+                        sampleSet = sampleSet, regionText = regionText,
+                        flip1 = flip1, flip2 = flip2,
+                        showPlot = showPlot, autolimitaspect_setting = autolimitaspect_setting,
+                        lineOpacity = lineOpacity, fillOpacity = fillOpacity,
+                        symbolSize = symbolSize, plotTitle = plotTitle, showTitle = showTitle,
+                        xLabelText = xLabelText, yLabelText = yLabelText,
+                        labelSize = labelSize)
+end
+
 
 
 # Option to focus on a region of chromosome.
@@ -475,6 +614,15 @@ function chooseChrRegion(pos, chr; positionMin=1, positionMax=NaN)
         regionText = string("chr ", chr, " ",positionMin," to ",positionMax)
     end
     return chr, positionMin, positionMax, regionText
+end
+
+"""
+    chooseChrRegion(myGenoData::GenoData, chr; positionMin=1, positionMax=NaN)
+
+Call chooseChrRegion using a `GenoData` object.
+"""
+function chooseChrRegion(myGenoData::GenoData, chr; positionMin=1, positionMax=NaN)
+    return chooseChrRegion(myGenoData.positions, chr; positionMin=1, positionMax=NaN)
 end
 
 
@@ -950,6 +1098,44 @@ function plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFra
     return f, sorted_SNP_genotypes_subset2, SNP_positions_subset2, sorted_indMetadata_subset
 end
 
+"""
+    plotGenotypeByIndividualWithFst(myGenoData::GenoData, groupsToCompare, 
+                            Fst_cutoff, missingFractionAllowed,
+                            regionInfo, Fst, pairwiseNamesFst,
+                            freqs, plotGroups, plotGroupColors;
+                            colorAllelesByGroup = true, group1 = plotGroups[1],
+                            indFontSize=10, figureSize=(1200, 1200),
+                            show_SNP_density = true, densityPlotColor = :steelblue1,
+                            plotTitle = nothing, titleFontSize = 20,
+                            highlightRegionStarts = [],
+                            highlightRegionEnds = [],
+                            highlightRegionColor = "red")
+
+Call the plotGenotypeByIndividualWithFst() function using a `GenoData` object.
+"""
+function plotGenotypeByIndividualWithFst(myGenoData::GenoData, groupsToCompare, 
+                            Fst_cutoff, missingFractionAllowed,
+                            regionInfo, Fst, pairwiseNamesFst,
+                            freqs, plotGroups, plotGroupColors;
+                            colorAllelesByGroup = true, group1 = plotGroups[1],
+                            indFontSize = 10, figureSize = (1200, 1200),
+                            show_SNP_density = true, densityPlotColor = :steelblue1,
+                            plotTitle = nothing, titleFontSize = 20,
+                            highlightRegionStarts = [],
+                            highlightRegionEnds = [],
+                            highlightRegionColor = "red")
+    return plotGenotypeByIndividualWithFst(groupsToCompare, Fst_cutoff, missingFractionAllowed,
+                            regionInfo, myGenoData.positions, Fst, pairwiseNamesFst,
+                            myGenoData.genotypes, myGenoData.indInfo, freqs, plotGroups, plotGroupColors;
+                            colorAllelesByGroup = colorAllelesByGroup, group1 = group1,
+                            indFontSize = indFontSize, figureSize = figureSize,
+                            show_SNP_density = show_SNP_density, densityPlotColor = densityPlotColor,
+                            plotTitle = plotTitle, titleFontSize = titleFontSize,
+                            highlightRegionStarts = highlightRegionStarts,
+                            highlightRegionEnds = highlightRegionEnds,
+                            highlightRegionColor = highlightRegionColor)
+end
+
 
 """
     getRollingMean(inputVector, windowSize)
@@ -1258,7 +1444,7 @@ function plotGenomeViSHet(scaffolds_to_plot,
     
     # get sizes of chromosomes (note this actually isn't the true length, just the mean position of the rightmost window):
     scaffoldLengths = repeat([-1], length(scaffolds_to_plot))	# vector of Int64
-    for i in 1:length(scaffolds_to_plot)
+    for i in 1:eachindex(scaffolds_to_plot)
         selection = windowed_pos_all.chrom .== scaffolds_to_plot[i]
         if sum(selection) == 0
             scaffoldLengths[i] = 0
@@ -1284,7 +1470,7 @@ function plotGenomeViSHet(scaffolds_to_plot,
         push!(scaffoldBpStartInRow, []) # initialize an empty vector for the next row
         placeInRow = 1
         # look through chromosomes and find some to go in this row
-        for i in 1:length(scaffolds_to_plot)
+        for i in 1:eachindex(scaffolds_to_plot)
             # if not plotted and short enough, add to row:
             if scaffoldPlottedAlready[i] .== false .&& scaffoldLengths[i] .<= remainingRowLength
                 push!(scaffoldInRow[row], scaffolds_to_plot[i])
