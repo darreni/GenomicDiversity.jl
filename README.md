@@ -23,7 +23,7 @@ Irwin, D., S. Bensch, C. Charlebois, G. David, A. Geraldes, S.K. Gupta, B. Harr,
 ## Disclaimer
 
 The functions in this package were developed by [Darren Irwin](https://www.zoology.ubc.ca/~irwin/irwinlab/) over a number of years, for use in various analyses. 
-They are now mature enough that I think it is an appropriate time to make them available as a Julia package.However, I am certain they could be improved in various ways. My intent is to revise and update this package over time, and I welcome feedback and suggestions regarding how to best do so.
+They are now mature enough that I think it is an appropriate time to make them available as a Julia package. However, I am certain they could be improved in various ways. My intent is to revise and update this package over time, and I welcome feedback and suggestions regarding how to best do so.
 
 ## Example analysis using GenomicDiversity.jl
 
@@ -41,80 +41,70 @@ and outputted the information in three files:
 * a `.indv` file containing individual identifiers (corresponding to rows of the genotype matrix)
 * a `.pos` file providing the locations of loci in the genome (with rows representing loci, column 1 indicating the scaffold, and column 2 indicating the position along that scaffold)
 
+Using the GenomicDiversity package, we can load the information in the above three files into a single data structure called a `GenoData`. (We also have the option of keeping the data in three distinct data structures--the package is flexible in that way.)
+
 First, we'll do some setup (loading packages and filenames):
 
 ```julia
-# load required packages
-using GenomicDiversity, MultivariateStats, CairoMakie, DataFrames, CSV, DelimitedFiles
+# load required packages 
+import Pkg
+Pkg.add("GenomicDiversity")
+Pkg.add("MultivariateStats")
+Pkg.add("CairoMakie")
+Pkg.add("DataFrames")
+Pkg.add("CSV")
+Pkg.add("DelimitedFiles")
+Pkg.add("Impute")
+# Note: ou only need to do the above once per Julia environment
+using GenomicDiversity, MultivariateStats, CairoMakie, DataFrames, CSV, DelimitedFiles, Impute
 
-# set data file names
-genotype_file_name = "SparrowDemo_genotypes.012"
-individuals_file_name = genotype_file_name * ".indv"
-position_file_name = genotype_file_name * ".pos"
-metadataFile = "SparrowDemo.Fst_groups.txt"
+# set data file names--make sure these are appropriate to your computer and file names
+pathName = "demoData/SparrowDemo_data_McCallumetal2024/"
+metadataFile = pathName * "SparrowDemo.Fst_groups.txt"
+genotypesFile = pathName * "SparrowDemo_genotypes.012"
+individualsFile = genotypesFile * ".indv"
+positionsFile = genotypesFile * ".pos"
 ```
 
-Now we load the data:
+Now we load the data into a `GenoData` object:
 
 ```julia
-# load the metadata
-metadata = DataFrame(CSV.File(metadataFile))
-
-# load the list of individuals
-ind = DataFrame(CSV.File(individuals_file_name; header=["ind"], types=[String]))
-
-# check that rows in each imported object are the same:
-indNum = size(ind, 1) # number of individuals
-if nrow(metadata) != indNum
-    println("WARNING: number of rows in metadata file different than number of individuals in .indv file")
-else println("Good news: number of rows in metadata file matches the number of individuals in .indv file")
-end
-
-# put individual names and metadata together, to enable easy confirmation that they match
-ind_with_metadata = hcat(ind, metadata)
-
-# load the genomic positions of loci
-pos_whole_genome = DataFrame(CSV.File(position_file_name; header=["chrom", "position"], types=[String, Int]))
-
-# load the genotype matrix
-geno = readdlm(genotype_file_name, '\t', Int16, '\n')
-loci_count = size(geno, 2) - 1   # because the first column is not a SNP (just a count from zero)
-print(string("Read in genotypic data at ", loci_count," loci for ", indNum, " individuals. \n"))
-genosOnly = geno[:, Not(1)] #remove first column, which was just a row index
+sparrowGenoData = GenomicDiversity.loadGenoData(metadataFile, individualsFile, genotypesFile, positionsFile)
+# look at the genotype matrix:
+sparrowGenoData.genotypes
 ```
 
-By examining the size of the `genosOnly` matrix, we can see that the data matrix includes 47 individuals and 45,986 loci. 
+By examining the size of the matrix, we can see that the data matrix includes 47 individuals and 45,986 loci. 
 
 We choose the groups to include in our analysis, and the colors to represent them. 
 These names refer to entries in the `Fst_group` column of the metadata file. 
 
 ```julia
 groups_to_plot = ["GCSP","PSWS","GWCS"]
-group_colors = ["gold","red","blue"]
+
+groupColorKey = Dict("GCSP" => "gold",
+                    "PSWS" => "red",
+                    "GWCS" => "blue")
+
+groupColors = [groupColorKey[i] for i in groupsToPlot]
 ```
 
 ### PCA
 
 If we want to use Principal Components Analysis (PCA) to visualize a good 2-dimensional representation
 of genomic relationships among individuals, we first need to impute missing genotypes.
-We will modify the type of matrix so that missing values are represented by `missing` rather than `-1`, 
-and then we'll impute:
+The function below will modify the type of matrix so that missing values are represented by `missing` rather than `-1`, 
+and then it imputes numerical values for the missing data:
 
 ```julia
-# change missing data format
-genosOnly_with_missing = Matrix{Union{Missing, Int16}}(genosOnly)
-genosOnly_with_missing[genosOnly_with_missing .== -1] .= missing;
-genosOnly_with_missing = Matrix{Union{Missing, Float32}}(genosOnly_with_missing) 
-
-# impute the missing genotypes
-imputed_genos = Impute.svd(genosOnly_with_missing)
+sparrowGenoDataImputed = GenomicDiversity.imputeMissingGenoData(sparrowGenoData)
 ```
 
 Now we are ready to call the `GenomicDiversity.plotPCA()` function to do the PCA and make the plot:
 
 ```julia
-PCAmodel = GenomicDiversity.plotPCA(imputed_genos, ind_with_metadata,
-        groups_to_plot, group_colors;
+PCAmodel = GenomicDiversity.plotPCA(sparrowGenoDataImputed,
+        groupsToPlot, groupColors;
         sampleSet="Zonotrichia sparrows", regionText="whole_genome",
         flip1=false, flip2=false, showPlot=true)
 PCAmodel.PCAfig  # shows the figure
@@ -136,18 +126,16 @@ We'll calculate allele frequencies and sample sizes for each group,
 and then genetic differentiation (known as F<sub>ST</sub>) between the groups:
 
 ```julia
-freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(genosOnly_with_missing,
-                            ind_with_metadata.Fst_group, groups_to_plot)
+freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoDataImputed, groupsToPlot)
 
-Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs,
-                                            sampleSizes, groups_to_plot)
+Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs, sampleSizes, groupsToPlot)
 ```
 
 Now we will choose a scaffold and specify some other parameters for the plotting algorithm:
 
 ```julia
 chr = "CM018231.2" # the name of a scaffold in the reference genome
-regionInfo = GenomicDiversity.chooseChrRegion(pos_whole_genome, chr) # this gets the maximum position for the chromosome
+regionInfo = chooseChrRegion(sparrowGenoData, chr) # this gets the maximum position for the chromosome
 group1 = "GCSP"   # the alleles most common in this  group will be assigned the same color in the graph
 groupsToCompare = "GCSP_PSWS" # The groups to compare for the Fst filter below
 Fst_cutoff =  0.8
@@ -157,11 +145,10 @@ missingFractionAllowed = 0.2
 Finally, we can actually make the plot:
 
 ```julia
-plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(groupsToCompare, 
-    Fst_cutoff, missingFractionAllowed, regionInfo, 
-    pos_whole_genome, Fst, pairwiseNamesFst, 
-    genosOnly_with_missing, ind_with_metadata, freqs, 
-    groups_to_plot, group_colors)
+plotInfo = plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompare, 
+    Fst_cutoff, missingFractionAllowed, 
+    regionInfo, Fst, pairwiseNamesFst, 
+    freqs, groupsToPlot, groupColors)
 plotInfo[1] # this outputs the plot
 ```
 
