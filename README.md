@@ -167,25 +167,29 @@ The GenomicDiversity package contains several functions for filtering `GenoData`
 An example in which we filter *out* the Golden-crowned Sparrows in our data set:
 
 ```julia
-sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP")
+sparrowGenoData_noGCSP = filterInds(sparrowGenoData, 
+            sparrowGenoData.indInfo.Fst_group .== "GCSP")
 ```
 
 Alternatively, filter *in* the Golden-crowned Sparrows (filtering out all the others):
 
 ```julia
-sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
+sparrowGenoData_onlyGCSP = filterInds(sparrowGenoData, 
+            sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
 ```
 
 A related function can be used to filter *out* based on names of individuals
 
 ```julia
-sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
+sparrowGenoData_2filteredOut = filterNamedInds(sparrowGenoData, 
+            ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
 ```
 
 Or filter those *in* instead:
 
 ```julia
-sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
+sparrowGenoData_2filteredIn = filterNamedInds(sparrowGenoData, 
+            ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
 ```
 
 ### filtering loci
@@ -194,13 +198,13 @@ This works in a similar way as above, but with loci rather than individuals. Fir
 
 ```julia
 lociSelection = (sparrowGenoData.positions.chrom .== "CM018230.2")
-sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection)
+sparrowGenoData_oneScaffoldRemoved = filterLoci(sparrowGenoData, lociSelection)
 ```
 
 Or, include those loci on that particular scaffold:
 
 ```julia
-sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection; direction = "in")
+sparrowGenoData_oneScaffoldOnly = filterLoci(sparrowGenoData, lociSelection; direction = "in")
 ```
 
 
