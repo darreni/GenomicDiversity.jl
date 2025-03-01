@@ -62,7 +62,7 @@ Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(fr
 # Now we will choose a scaffold and specify some other parameters for the plotting algorithm:
 
 chr = "CM018231.2" # the name of a scaffold in the reference genome
-regionInfo = chooseChrRegion(sparrowGenoData, chr) # this gets the maximum position for the chromosome
+regionInfo = GenomicDiversity.chooseChrRegion(sparrowGenoData, chr) # this gets the maximum position for the chromosome
 group1 = "GCSP"   # the alleles most common in this  group will be assigned the same color in the graph
 groupsToCompare = "GCSP_PSWS" # The groups to compare for the Fst filter below
 Fst_cutoff =  0.8
@@ -70,7 +70,7 @@ missingFractionAllowed = 0.2
 
 # Finally, we can actually make the plot:
 
-plotInfo = plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompare, 
+plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompare, 
     Fst_cutoff, missingFractionAllowed, 
     regionInfo, Fst, pairwiseNamesFst, 
     freqs, groupsToPlot, groupColors)
@@ -78,7 +78,7 @@ plotInfo = plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompa
 # The above way of calling the function has the `GenoData` object as the first argument. 
 # Another way is to pass the the three components of the `GenoData` separately: 
 
-plotInfo = plotGenotypeByIndividualWithFst(groupsToCompare, 
+plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(groupsToCompare, 
     Fst_cutoff, missingFractionAllowed, regionInfo, 
     sparrowGenoDataImputed.positions, Fst, pairwiseNamesFst, 
     sparrowGenoDataImputed.genotypes, sparrowGenoDataImputed.indInfo, freqs, 
@@ -88,16 +88,16 @@ plotInfo[1] # this outputs the plot
 
 # Filter individuals
 
-sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP")
+sparrowGenoData_noGCSP = GenomicDiversity.filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP")
 
-sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
-
-
-
-sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
+sparrowGenoData_noGCSP = GenomicDiversity.filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
 
 
-sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
+
+sparrowGenoData_filtered = GenomicDiversity.filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
+
+
+sparrowGenoData_filtered = GenomicDiversity.filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
 
 
 
@@ -105,10 +105,10 @@ sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCS
 
 # filter out one chromosome
 lociSelection = (sparrowGenoData.positions.chrom .== "CM018230.2")
-sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection)
+sparrowGenoData_LociFiltered = GenomicDiversity.filterLoci(sparrowGenoData, lociSelection)
 
 # filter in one chromosome (and remove others)
 
-sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection; direction = "in")
+sparrowGenoData_LociFiltered = GenomicDiversity.filterLoci(sparrowGenoData, lociSelection; direction = "in")
 
 

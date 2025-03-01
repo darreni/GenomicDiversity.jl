@@ -128,14 +128,15 @@ and then genetic differentiation (known as F<sub>ST</sub>) between the groups:
 ```julia
 freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoDataImputed, groupsToPlot)
 
-Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs, sampleSizes, groupsToPlot)
+Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs, 
+                                    sampleSizes, groupsToPlot)
 ```
 
 Now we will choose a scaffold and specify some other parameters for the plotting algorithm:
 
 ```julia
 chr = "CM018231.2" # the name of a scaffold in the reference genome
-regionInfo = chooseChrRegion(sparrowGenoData, chr) # this gets the maximum position for the chromosome
+regionInfo = GenomicDiversity.chooseChrRegion(sparrowGenoData, chr) # this gets the maximum position for the chromosome
 group1 = "GCSP"   # the alleles most common in this  group will be assigned the same color in the graph
 groupsToCompare = "GCSP_PSWS" # The groups to compare for the Fst filter below
 Fst_cutoff =  0.8
@@ -145,8 +146,8 @@ missingFractionAllowed = 0.2
 Finally, we can actually make the plot:
 
 ```julia
-plotInfo = plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompare, 
-    Fst_cutoff, missingFractionAllowed, 
+plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, 
+    groupsToCompare, Fst_cutoff, missingFractionAllowed, 
     regionInfo, Fst, pairwiseNamesFst, 
     freqs, groupsToPlot, groupColors)
 plotInfo[1] # this outputs the plot
@@ -167,28 +168,28 @@ The GenomicDiversity package contains several functions for filtering `GenoData`
 An example in which we filter *out* the Golden-crowned Sparrows in our data set:
 
 ```julia
-sparrowGenoData_noGCSP = filterInds(sparrowGenoData, 
+sparrowGenoData_noGCSP = GenomicDiversity.filterInds(sparrowGenoData, 
             sparrowGenoData.indInfo.Fst_group .== "GCSP")
 ```
 
 Alternatively, filter *in* the Golden-crowned Sparrows (filtering out all the others):
 
 ```julia
-sparrowGenoData_onlyGCSP = filterInds(sparrowGenoData, 
+sparrowGenoData_onlyGCSP = GenomicDiversity.filterInds(sparrowGenoData, 
             sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
 ```
 
 A related function can be used to filter *out* based on names of individuals
 
 ```julia
-sparrowGenoData_2filteredOut = filterNamedInds(sparrowGenoData, 
+sparrowGenoData_2filteredOut = GenomicDiversity.filterNamedInds(sparrowGenoData, 
             ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
 ```
 
 Or filter those *in* instead:
 
 ```julia
-sparrowGenoData_2filteredIn = filterNamedInds(sparrowGenoData, 
+sparrowGenoData_2filteredIn = GenomicDiversity.filterNamedInds(sparrowGenoData, 
             ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
 ```
 
@@ -198,13 +199,13 @@ This works in a similar way as above, but with loci rather than individuals. Fir
 
 ```julia
 lociSelection = (sparrowGenoData.positions.chrom .== "CM018230.2")
-sparrowGenoData_oneScaffoldRemoved = filterLoci(sparrowGenoData, lociSelection)
+sparrowGenoData_oneScaffoldRemoved = GenomicDiversity.filterLoci(sparrowGenoData, lociSelection)
 ```
 
 Or, include those loci on that particular scaffold:
 
 ```julia
-sparrowGenoData_oneScaffoldOnly = filterLoci(sparrowGenoData, lociSelection; direction = "in")
+sparrowGenoData_oneScaffoldOnly = GenomicDiversity.filterLoci(sparrowGenoData, lociSelection; direction = "in")
 ```
 
 
