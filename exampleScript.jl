@@ -37,7 +37,7 @@ sparrowGenoDataImputed = GenomicDiversity.imputeMissingGenoData(sparrowGenoData)
 PCAmodel = GenomicDiversity.plotPCA(sparrowGenoDataImputed,
         groupsToPlot, groupColors;
         sampleSet="Zonotrichia sparrows", regionText="whole_genome",
-        flip1=false, flip2=false, showPlot=true)
+        flip1=true, flip2=false, showPlot=true)
 PCAmodel.PCAfig 
 
 # The above shows genomic variation illustrated in 2 dimensions, showing Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue.
@@ -84,5 +84,31 @@ plotInfo = plotGenotypeByIndividualWithFst(groupsToCompare,
     sparrowGenoDataImputed.genotypes, sparrowGenoDataImputed.indInfo, freqs, 
     groupsToPlot, groupColors)
 plotInfo[1] # this outputs the plot
+
+
+# Filter individuals
+
+sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP")
+
+sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
+
+
+
+sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
+
+
+sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
+
+
+
+# Filter loci
+
+# filter out one chromosome
+lociSelection = (sparrowGenoData.positions.chrom .== "CM018230.2")
+sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection)
+
+# filter in one chromosome (and remove others)
+
+sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection; direction = "in")
 
 

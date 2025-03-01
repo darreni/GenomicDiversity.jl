@@ -27,6 +27,9 @@ module GenomicDiversity
 export greet_GenomicDiversity,
     GenoData,
     loadGenoData,
+    filterInds,
+    filterNamedInds,
+    filterLoci,
     imputeMissingGenotypes,
     getFreqsAndSampleSizes,
     getSitePi,
@@ -56,6 +59,7 @@ using MultivariateStats,
     DelimitedFiles, 
     Impute
 
+
 """
     greet_GenomicDiversity()
 
@@ -66,6 +70,7 @@ function greet_GenomicDiversity()
     println(greeting)
     return greeting
 end
+
 
 """
     GenoData(indInfo::DataFrame, genotypes::Matrix, positions::DataFrame)
@@ -95,6 +100,7 @@ mutable struct GenoData
     end
 end
 
+
 """
     loadGenoData(metadataFile, individualsFile, genotypesFile, positionsFile)
 
@@ -107,7 +113,7 @@ Imports data from four files and builds a `GenoData` object.
 - `positionsFile`: The path and name of the file containing the genomic position info of the loci corresponding to columns of the genotype matrix.
 
 # Notes
-Returns a `GenoData`` object, containing:
+Returns a `GenoData` object, containing:
 - `indInfo`: A DataFrame containing metadata.
 - `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
 - `positions`: A 2-column DataFrame containing genomic location info of SNPs.
@@ -139,6 +145,89 @@ function loadGenoData(metadataFile, individualsFile, genotypesFile, positionsFil
     println(string("Have read in genotypic data at ", size(genosOnly, 2)," loci for ", size(genosOnly, 1), " individuals. \n"))
     return GenoData(indNames_with_indMetadata, genosOnly, positions)
 end
+
+
+"""
+    filterInds(myGenoData::GenoData, selection; direction = "out")
+
+Filter the individuals indicated by `selection`, and store result in a new `GenoData` object. 
+The default is to filter individuals out (remove them); set direction = "in" to filter them in (and remove others).
+
+​# Arguments
+- `myGenoData`: A `GenoData` object.
+- `selection`: A vector of Boolean values, or a BitVector.
+- `direction`: (optional) The direction to filter (default is "out")
+
+# Notes
+Returns a `GenoData` object, containing:
+- `indInfo`: A DataFrame containing metadata.
+- `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
+- `positions`: A 2-column DataFrame containing genomic location info of SNPs.
+"""
+function filterInds(myGenoData::GenoData, selection; direction = "out")
+    if direction == "in"
+        selection = .!(selection)
+    elseif direction != "out"
+        error("""Direction should be "out" or "in".""")
+    end
+    println("Specific individuals filtered out: ")
+    display(myGenoData.indInfo.ind[selection])
+    return GenoData(myGenoData.indInfo[.!(selection), :], 
+                    myGenoData.genotypes[.!(selection), :], 
+                    myGenoData.positions)
+end
+
+
+"""
+    filterNamedInds(myGenoData::GenoData, inds; direction = "out")
+
+Filter out the individuals indicated by `selection`, and store result in a new `GenoData` object. 
+
+​# Arguments
+- `myGenoData`: A `GenoData` object.
+- `inds`: A collection of names (strings) to filter out.
+- `direction`: (optional) The direction to filter (default is "out")
+
+# Notes
+Returns a `GenoData` object, containing:
+- `indInfo`: A DataFrame containing metadata.
+- `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
+- `positions`: A 2-column DataFrame containing genomic location info of loci.
+"""
+function filterNamedInds(myGenoData::GenoData, inds; direction = "out")
+    selection = map(in(inds), myGenoData.indInfo.ind)
+    return filterInds(myGenoData::GenoData, selection; direction)
+end
+
+
+"""
+    filterLoci(myGenoData::GenoData, selection; direction = "out")
+
+Filter the loci indicated by `selection`, and store result in a new `GenoData` object. 
+The default is to filter loci out (remove them); set direction = "in" to filter them in (and remove others).
+
+​# Arguments
+- `myGenoData`: A `GenoData` object.
+- `selection`: A vector of Boolean values, or a BitVector.
+- `direction`: (optional) The direction to filter (default is "out")
+
+# Notes
+Returns a `GenoData` object, containing:
+- `indInfo`: A DataFrame containing metadata.
+- `genotypes`: A Matrix containing genotypes for individuals (rows) and loci (columns).
+- `positions`: A 2-column DataFrame containing genomic location info of loci.
+"""
+function filterLoci(myGenoData::GenoData, selection; direction = "out")
+    if direction == "in"
+        selection = .!(selection)
+    elseif direction != "out"
+        error("""`direction` should be "out" or "in".""")
+    end
+    return GenoData(myGenoData.indInfo, 
+                    myGenoData.genotypes[:, .!(selection)], 
+                    myGenoData.positions[.!(selection), :])
+end
+
 
 """
     imputeMissingGenotypes(genotypeMatrix::Matrix; method = "SVD")
@@ -175,33 +264,34 @@ end
 
 
 """
-    getFreqsAndSampleSizes(genoData, indGroup, groupsToCalc)
+    getFreqsAndSampleSizes(genotypes, indGroup, groupsToCalc)
 
 Calculate allele frequencies and sample sizes for each group and SNP.
 
 ​# Arguments
-- `genoData`: The genotype matrix, where rows are individuals and columns are loci, with genotype codes 0,1,2 meaning homozygous reference, heterozygote, homozygous alternate, and missing genotypes can be either -1 or `missing`.
+- `genotypes`: The genotype matrix, where rows are individuals and columns are loci, with genotype codes 0,1,2 meaning homozygous reference, heterozygote, homozygous alternate, and missing genotypes can be either -1 or `missing`.
 - `indGroup`: A vector providing the group name each individual belongs to.
 - `groupsToCalc`: A list of group names to include in calculations.
 
 # Notes
 Returns a tuple containing 1) a matrix of frequencies, and 2) a matrix of samples sizes (in both, rows are groups and columns are loci). 
 """
-function getFreqsAndSampleSizes(genoData, indGroup, groupsToCalc)
+function getFreqsAndSampleSizes(genotypes, indGroup, groupsToCalc)
     groupCount = length(groupsToCalc)
-    freqs = Array{Float32,2}(undef, groupCount, size(genoData, 2))
-    sampleSizes = Array{Int16,2}(undef, groupCount, size(genoData, 2))
+    freqs = Array{Float32,2}(undef, groupCount, size(genotypes, 2))
+    sampleSizes = Array{Int16,2}(undef, groupCount, size(genotypes, 2))
     for i in 1:groupCount
         selection = (indGroup .== groupsToCalc[i]) # gets the correct rows for individuals in the group 
-        geno0counts = sum(isequal.(genoData[selection, :], 0), dims=1) # count by column the number of 0 genotypes (homozygous ref)
-        geno1counts = sum(isequal.(genoData[selection, :], 1), dims=1) # same for 1 genotypes (heterozygous)
-        geno2counts = sum(isequal.(genoData[selection, :], 2), dims=1) # same for 2 genotypes (homozygous alternate) 
+        geno0counts = sum(isequal.(genotypes[selection, :], 0), dims=1) # count by column the number of 0 genotypes (homozygous ref)
+        geno1counts = sum(isequal.(genotypes[selection, :], 1), dims=1) # same for 1 genotypes (heterozygous)
+        geno2counts = sum(isequal.(genotypes[selection, :], 2), dims=1) # same for 2 genotypes (homozygous alternate) 
         sumGenoCounts = geno0counts .+ geno1counts .+ geno2counts
         sampleSizes[i, :] = sumGenoCounts
         freqs[i, :] = ((2 .* geno2counts) .+ geno1counts) ./ (2 * sumGenoCounts)
     end
     return freqs, sampleSizes
 end
+
 
 """
     getFreqsAndSampleSizes(myGenoData::GenoData, groupsToCalc)
@@ -212,6 +302,7 @@ function getFreqsAndSampleSizes(myGenoData::GenoData, groupsToCalc)
     return getFreqsAndSampleSizes(myGenoData.genotypes,
                                     myGenoData.indInfo.Fst_group, groupsToCalc)
 end
+
 
 """
     getSitePi(freqs, sampleSizes)
@@ -247,7 +338,6 @@ function getRegionPi(sitePiMatrix)
 end
 
 
-# function copied from IrwinLabGenomicsAnalysisScriptV2.jl :
 """
     getPairwiseNames(groupsToCalc)::Vector{String}
 

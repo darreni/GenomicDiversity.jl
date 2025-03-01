@@ -158,6 +158,52 @@ The resulting plot:
 
 The above shows genotypic variation among _Zonotrichia_ sparrows along a single chromosome. Each row represents an individual, with leftmost and rightmost colors indicating  Golden-crowned sparrows in yellow, _pugetensis_ White-crowned Sparrows in red, and _gambelii_ White-crowned Sparrows in blue. Dark purple and light purple boxes represent homozygotes for alternate loci, and boxes with triangles represent heterozygotes. Missing data is indicated by a horizontal line. Only highly differentiated (F<sub>ST</sub> > 0.8) loci are shown.
 
+## Filtering of individuals and loci
+
+The GenomicDiversity package contains several functions for filtering `GenoData` objects. These are written in a flexible way to allow for filtering out (the default) or in according to criteria set up by the user:
+
+### filtering individuals
+
+An example in which we filter *out* the Golden-crowned Sparrows in our data set:
+
+```julia
+sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP")
+```
+
+Alternatively, filter *in* the Golden-crowned Sparrows (filtering out all the others):
+
+```julia
+sparrowGenoData_noGCSP = filterInds(sparrowGenoData, sparrowGenoData.indInfo.Fst_group .== "GCSP"; direction = "in")
+```
+
+A related function can be used to filter *out* based on names of individuals
+
+```julia
+sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"])
+```
+
+Or filter those *in* instead:
+
+```julia
+sparrowGenoData_filtered = filterNamedInds(sparrowGenoData, ["sp_ocwa_plate1_GCSP002", "sp_ocwa_plate1_GCSP004"]; direction = "in")
+```
+
+### filtering loci
+
+This works in a similar way as above, but with loci rather than individuals. First, an example of filtering in based on some criteria, in this case removing the loci on a particular scaffold:
+
+```julia
+lociSelection = (sparrowGenoData.positions.chrom .== "CM018230.2")
+sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection)
+```
+
+Or, include those loci on that particular scaffold:
+
+```julia
+sparrowGenoData_LociFiltered = filterLoci(sparrowGenoData, lociSelection; direction = "in")
+```
+
+
 ## Documentation
 
 Descriptions of all functions in the GenomicDiversity can be found [here](https://darreni.github.io/GenomicDiversity.jl/dev/).
