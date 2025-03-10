@@ -18,7 +18,7 @@ It can produce plots that illustrate various aspects of genomic diversity.
 
 If you use GenomicDiversity.jl, please cite this paper which will be the first to formally mention this package:
 
-Irwin, D., S. Bensch, C. Charlebois, G. David, A. Geraldes, S.K. Gupta, B. Harr, P. Holt, J.H. Irwin, V.V. Ivanitskii, I.M. Marova, Y. Niu, S. Seneviratne, A. Singh, Y. Wu, S. Zhang, T.D. Price. 2024. The distribution and dispersal of large haploblocks in a superspecies. Preprint (not yet peer-reviewed) on _Authorea_: [https://doi.org/10.22541/au.173114974.42895933/v1](https://doi.org/10.22541/au.173114974.42895933/v1)
+Irwin, D., S. Bensch, C. Charlebois, G. David, A. Geraldes, S.K. Gupta, B. Harr, P. Holt, J.H. Irwin, V.V. Ivanitskii, I.M. Marova, Y. Niu, S. Seneviratne, A. Singh, Y. Wu, S. Zhang, T.D. Price. 2025. The distribution and dispersal of large haploblocks in a superspecies. Molecular Ecology, in press.
 
 ## Disclaimer
 
@@ -36,7 +36,7 @@ The data files are within the folder `demoData/SparrowDemo_data_McCallumetal2024
 
 These input files were produced by an analysis pipeline that took genotyping-by-sequencing (GBS) reads, 
 mapped them to a reference genome, identified single nucleotide polymorphisms (SNPs), called genotypes of individuals,
-and outputted the information in three files: 
+and output the information in three files: 
 * a genotype file containing a matrix of genotypes (rows representing individuals and columns representing loci), where 0 represents homozygous reference, 1 represents heterozygous, 2 represents homozygous alternate, and -1 represents missing data
 * a `.indv` file containing individual identifiers (corresponding to rows of the genotype matrix)
 * a `.pos` file providing the locations of loci in the genome (with rows representing loci, column 1 indicating the scaffold, and column 2 indicating the position along that scaffold)
@@ -126,7 +126,7 @@ We'll calculate allele frequencies and sample sizes for each group,
 and then genetic differentiation (known as F<sub>ST</sub>) between the groups:
 
 ```julia
-freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoDataImputed, groupsToPlot)
+freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoData, groupsToPlot)
 
 Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs, 
                                     sampleSizes, groupsToPlot)
@@ -140,14 +140,14 @@ regionInfo = GenomicDiversity.chooseChrRegion(sparrowGenoData, chr) # this gets 
 group1 = "GCSP"   # the alleles most common in this  group will be assigned the same color in the graph
 groupsToCompare = "GCSP_PSWS" # The groups to compare for the Fst filter below
 Fst_cutoff =  0.8
-missingFractionAllowed = 0.2
+missingFractionAllowed = 0.1
 ```
 
 Finally, we can actually make the plot:
 
 ```julia
-plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, 
-    groupsToCompare, Fst_cutoff, missingFractionAllowed, 
+plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoData, groupsToCompare, 
+    Fst_cutoff, missingFractionAllowed, 
     regionInfo, Fst, pairwiseNamesFst, 
     freqs, groupsToPlot, groupColors)
 plotInfo[1] # this outputs the plot

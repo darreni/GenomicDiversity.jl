@@ -52,7 +52,7 @@ We'll calculate allele frequencies and sample sizes for each group,
 and then genetic differentiation (known as F<sub>ST</sub>) between the groups:
  =#
 
-freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoDataImputed, groupsToPlot)
+freqs, sampleSizes = GenomicDiversity.getFreqsAndSampleSizes(sparrowGenoData, groupsToPlot)
 
 
 Fst, FstNumerator, FstDenominator, pairwiseNamesFst = GenomicDiversity.getFst(freqs,
@@ -66,22 +66,23 @@ regionInfo = GenomicDiversity.chooseChrRegion(sparrowGenoData, chr) # this gets 
 group1 = "GCSP"   # the alleles most common in this  group will be assigned the same color in the graph
 groupsToCompare = "GCSP_PSWS" # The groups to compare for the Fst filter below
 Fst_cutoff =  0.8
-missingFractionAllowed = 0.2
+missingFractionAllowed = 0.1
 
 # Finally, we can actually make the plot:
 
-plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoDataImputed, groupsToCompare, 
+plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(sparrowGenoData, groupsToCompare, 
     Fst_cutoff, missingFractionAllowed, 
     regionInfo, Fst, pairwiseNamesFst, 
     freqs, groupsToPlot, groupColors)
+save("demoData/SparrowDemo_data_McCallumetal2024/SparrowDemo_GBI.png", plotInfo[1], px_per_unit = 2.0)
 
 # The above way of calling the function has the `GenoData` object as the first argument. 
 # Another way is to pass the the three components of the `GenoData` separately: 
 
 plotInfo = GenomicDiversity.plotGenotypeByIndividualWithFst(groupsToCompare, 
     Fst_cutoff, missingFractionAllowed, regionInfo, 
-    sparrowGenoDataImputed.positions, Fst, pairwiseNamesFst, 
-    sparrowGenoDataImputed.genotypes, sparrowGenoDataImputed.indInfo, freqs, 
+    sparrowGenoData.positions, Fst, pairwiseNamesFst, 
+    sparrowGenoData.genotypes, sparrowGenoData.indInfo, freqs, 
     groupsToPlot, groupColors)
 plotInfo[1] # this outputs the plot
 
