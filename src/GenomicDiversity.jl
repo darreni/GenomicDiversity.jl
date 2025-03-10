@@ -1534,7 +1534,7 @@ function plotGenomeViSHet(scaffolds_to_plot,
     
     # get sizes of chromosomes (note this actually isn't the true length, just the mean position of the rightmost window):
     scaffoldLengths = repeat([-1], length(scaffolds_to_plot))	# vector of Int64
-    for i in 1:eachindex(scaffolds_to_plot)
+    for i in eachindex(scaffolds_to_plot)
         selection = windowed_pos_all.chrom .== scaffolds_to_plot[i]
         if sum(selection) == 0
             scaffoldLengths[i] = 0
@@ -1560,7 +1560,7 @@ function plotGenomeViSHet(scaffolds_to_plot,
         push!(scaffoldBpStartInRow, []) # initialize an empty vector for the next row
         placeInRow = 1
         # look through chromosomes and find some to go in this row
-        for i in 1:eachindex(scaffolds_to_plot)
+        for i in eachindex(scaffolds_to_plot)
             # if not plotted and short enough, add to row:
             if scaffoldPlottedAlready[i] .== false .&& scaffoldLengths[i] .<= remainingRowLength
                 push!(scaffoldInRow[row], scaffolds_to_plot[i])
