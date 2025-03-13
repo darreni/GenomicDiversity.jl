@@ -80,7 +80,7 @@ We choose the groups to include in our analysis, and the colors to represent the
 These names refer to entries in the `Fst_group` column of the metadata file. 
 
 ```julia
-groups_to_plot = ["GCSP","PSWS","GWCS"]
+groupsToPlot = ["GCSP","PSWS","GWCS"]
 
 groupColorKey = Dict("GCSP" => "gold",
                     "PSWS" => "red",
